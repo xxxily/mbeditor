@@ -1,8 +1,35 @@
+# Dependencies
 frontend/node_modules/
-frontend/dist/
+backend/__pycache__/
 **/__pycache__/
 *.pyc
+
+# Build output
+frontend/dist/
+
+# Data (user-generated)
 data/images/
 data/articles/
 data/config.json
+data/*.html
 !data/.gitkeep
+!data/config.json.example
+
+# Environment
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code / Skills (development tools)
+docs/superpowers/
+skill/
+CLAUDE.md
