@@ -29,7 +29,7 @@ data/*.html
 .DS_Store
 Thumbs.db
 
-# Claude Code / Skills (development tools)
+# Development tools
 docs/superpowers/
-skill/
 CLAUDE.md
+.playwright-mcp/
