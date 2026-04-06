@@ -55,6 +55,11 @@ curl -X POST /api/v1/publish/draft -d '{"article_id":"{id}"}'
 </tr>
 </table>
 
+<details>
+<summary><strong>微信公众号后台 — 草稿箱管理</strong></summary>
+<img src="docs/screenshots/wechat-backend.png" alt="微信公众号后台" />
+</details>
+
 ## 技术栈
 
 | 层 | 技术 |
