@@ -55,27 +55,110 @@
 
 ## 快速开始
 
+### 第一步：部署 MBEditor
+
 ```bash
 git clone https://github.com/AAAAAnson/mbeditor.git
 cd mbeditor
 docker compose up -d
-# 打开 http://localhost:7073
 ```
 
-三行命令，编辑器就跑起来了。
+部署完成后：
+- **编辑器界面**：http://localhost:7073
+- **API 接口**：http://localhost:7072/api/v1
+
+### 第二步：安装 AI Agent Skill
+
+MBEditor 提供了 `skill/SKILL.md`，安装后 Agent 就能直接操控编辑器。根据你使用的 Agent 选择对应方式：
+
+<details open>
+<summary><strong>Claude Code</strong></summary>
+
+**方式一：项目级安装（推荐）**
+
+在 MBEditor 项目目录下直接使用，Agent 自动读取 `skill/SKILL.md`：
+
+```bash
+cd mbeditor
+claude "帮我写一篇关于 Docker 的推文，推到草稿箱"
+```
+
+**方式二：全局安装（任意目录可用）**
+
+将 Skill 文件复制到 Claude Code 的全局 skills 目录：
+
+```bash
+# macOS / Linux
+mkdir -p ~/.claude/skills
+cp skill/SKILL.md ~/.claude/skills/wechat-editor.md
+
+# Windows
+mkdir %USERPROFILE%\.claude\skills
+copy skill\SKILL.md %USERPROFILE%\.claude\skills\wechat-editor.md
+```
+
+安装后在任意目录都可以使用：
+
+```bash
+claude "写一篇 AI 入门的公众号文章，杂志风排版，发到草稿箱"
+```
+
+</details>
+
+<details>
+<summary><strong>Codex</strong></summary>
+
+将 Skill 文件放到 Codex 的 agents 目录：
+
+```bash
+# macOS / Linux
+mkdir -p ~/.codex/agents
+cp skill/SKILL.md ~/.codex/agents/wechat-editor.md
+
+# 使用
+codex "部署微信编辑器，然后写一篇推文发到草稿箱"
+```
+
+</details>
+
+<details>
+<summary><strong>OpenClaw</strong></summary>
+
+使用 OpenClaw 的 skill 命令直接注册：
+
+```bash
+openclaw skill add ./skill/SKILL.md
+
+# 使用
+openclaw "写一篇公众号推文，主题是 Docker 入门"
+```
+
+</details>
+
+> **注意**：SKILL.md 中默认的 API 地址是 `localhost:7071`（本地开发端口）。如果你使用 Docker 部署，需要将 SKILL.md 中的端口改为 `7072`（API）和 `7073`（编辑器），或者在 `docker-compose.yml` 中修改端口映射。
+
+### 第三步：配置微信公众号（可选）
+
+如果需要一键推送到公众号草稿箱，在编辑器的「设置」页面填入微信公众号的 AppID 和 AppSecret，或通过 API 配置：
+
+```bash
+curl -X PUT http://localhost:7072/api/v1/config \
+  -H "Content-Type: application/json" \
+  -d '{"appid":"wx你的appid","appsecret":"你的appsecret"}'
+```
 
 ## Agent 工作流
 
-MBEditor 的设计哲学是 **Agent First**。以下是 Agent 的典型工作流：
+MBEditor 的设计哲学是 **Agent First**。Agent 通过 REST API 完成全部操作：
 
 ```bash
 # 1. 创建文章
 curl -X POST http://localhost:7072/api/v1/articles \
   -H "Content-Type: application/json" \
   -d '{"title":"AI 入门指南","mode":"html"}'
-# → 返回 {"data": {"id": "a1b2c3"}}
+# → {"data": {"id": "a1b2c3"}}
 
-# 2. 写入内容（Agent 生成的 HTML）
+# 2. 写入内容
 curl -X PUT http://localhost:7072/api/v1/articles/a1b2c3 \
   -d '{"html":"<h1>AI 入门</h1><p>正文...</p>", "css":"h1{color:#333}"}'
 
@@ -88,14 +171,10 @@ curl -X POST http://localhost:7072/api/v1/publish/draft \
   -d '{"article_id":"a1b2c3"}'
 ```
 
-或者直接让 Agent 来：
+或者一句话搞定：
 
 ```bash
-# Claude Code
 claude "写一篇关于 MBEditor 的推文，杂志风排版，推到草稿箱"
-
-# 安装为全局 Skill（任意目录可用）
-cp skill/SKILL.md ~/.claude/skills/wechat-editor.md
 ```
 
 ## 推荐搭配 Skill
