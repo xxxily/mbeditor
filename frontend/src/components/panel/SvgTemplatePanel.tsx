@@ -1,5 +1,16 @@
-import { useState, useMemo } from "react";
-import { ChevronDown, ChevronRight, Eye, PlusCircle } from "lucide-react";
+import { useState, useMemo, useCallback } from "react";
+import {
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  PlusCircle,
+  MousePointerClick,
+  Layers,
+  RotateCcw,
+  GalleryHorizontalEnd,
+  Type,
+  Hand,
+} from "lucide-react";
 import { svgTemplates, type SvgTemplate } from "@/utils/svg-templates";
 
 interface SvgTemplatePanelProps {
@@ -14,18 +25,35 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const CATEGORIES: SvgTemplate["category"][] = ["click", "slide", "animation"];
 
+/** Icon per template id */
+const TEMPLATE_ICONS: Record<string, typeof MousePointerClick> = {
+  accordion: MousePointerClick,
+  "before-after": Layers,
+  "flip-card": RotateCcw,
+  carousel: GalleryHorizontalEnd,
+  "fade-in-text": Type,
+  "press-reveal": Hand,
+};
+
+/** Accent color per template */
+const TEMPLATE_COLORS: Record<string, string> = {
+  accordion: "#E8553A",
+  "before-after": "#6B7FBF",
+  "flip-card": "#C9923E",
+  carousel: "#3A9E7E",
+  "fade-in-text": "#8B5CF6",
+  "press-reveal": "#EC4899",
+};
+
 function getDefaultConfig(tpl: SvgTemplate): Record<string, string | number> {
   const defaults: Record<string, string | number> = {};
-  tpl.fields.forEach((f) => {
-    defaults[f.key] = f.default;
-  });
+  tpl.fields.forEach((f) => { defaults[f.key] = f.default; });
   return defaults;
 }
 
-/** Build a self-contained srcdoc for mini preview */
 function buildPreviewDoc(html: string): string {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-body{margin:0;padding:8px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:12px;line-height:1.5;color:#333;overflow:hidden;transform-origin:top left;}
+body{margin:0;padding:12px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;line-height:1.6;color:#333;}
 img{max-width:100%;border-radius:4px;}
 </style></head><body>${html}</body></html>`;
 }
@@ -34,22 +62,11 @@ export default function SvgTemplatePanel({ onInsert }: SvgTemplatePanelProps) {
   const [expanded, setExpanded] = useState(true);
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
   const [configs, setConfigs] = useState<Record<string, Record<string, string | number>>>({});
-  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
 
-  /** Memoize default rendered HTML for each template */
-  const defaultPreviews = useMemo(() => {
-    const map: Record<string, string> = {};
-    svgTemplates.forEach((tpl) => {
-      const cfg = getDefaultConfig(tpl);
-      map[tpl.id] = tpl.render(cfg);
-    });
-    return map;
-  }, []);
-
-  const getConfig = (tpl: SvgTemplate): Record<string, string | number> => {
+  const getConfig = useCallback((tpl: SvgTemplate): Record<string, string | number> => {
     if (configs[tpl.id]) return configs[tpl.id];
     return getDefaultConfig(tpl);
-  };
+  }, [configs]);
 
   const updateConfig = (tplId: string, key: string, value: string | number) => {
     const tpl = svgTemplates.find((t) => t.id === tplId);
@@ -60,169 +77,172 @@ export default function SvgTemplatePanel({ onInsert }: SvgTemplatePanelProps) {
     }));
   };
 
-  const handlePreview = (tpl: SvgTemplate) => {
-    const config = getConfig(tpl);
-    const html = tpl.render(config);
-    setPreviewHtml(html);
-  };
-
   const handleInsert = (tpl: SvgTemplate) => {
     const config = getConfig(tpl);
-    const html = tpl.render(config);
-    onInsert(html);
+    onInsert(tpl.render(config));
   };
+
+  /** Live preview HTML for the active template */
+  const activePreviewHtml = useMemo(() => {
+    if (!activeTemplate) return "";
+    const tpl = svgTemplates.find((t) => t.id === activeTemplate);
+    if (!tpl) return "";
+    return tpl.render(getConfig(tpl));
+  }, [activeTemplate, configs, getConfig]);
 
   return (
     <div className="border-t border-border-primary">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-1 px-4 py-2 text-xs font-medium text-fg-secondary hover:text-fg-primary transition-colors"
+        className="w-full flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-medium text-fg-secondary hover:text-fg-primary transition-colors"
       >
         {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-        SVG 交互模板
+        <span className="font-mono text-[10px] font-semibold tracking-[1.5px] uppercase">
+          交互模板
+        </span>
+        <span className="ml-auto text-[10px] text-fg-muted">{svgTemplates.length}</span>
       </button>
 
       {expanded && (
-        <div className="px-4 pb-3 space-y-3">
+        <div className="px-3 pb-3 space-y-4">
           {CATEGORIES.map((cat) => {
             const templates = svgTemplates.filter((t) => t.category === cat);
             if (templates.length === 0) return null;
             return (
               <div key={cat}>
-                <div className="text-[10px] uppercase tracking-wider text-fg-muted mb-1">
+                <div className="text-[10px] uppercase tracking-wider text-fg-muted mb-1.5 px-0.5">
                   {CATEGORY_LABELS[cat]}
                 </div>
-                <div className="space-y-2">
-                  {templates.map((tpl) => (
-                    <div key={tpl.id} className={`rounded-lg overflow-hidden border transition-colors ${activeTemplate === tpl.id ? "border-accent-border" : "border-border-secondary"}`}>
-                      {/* Live mini preview */}
-                      <button
-                        onClick={() =>
-                          setActiveTemplate(activeTemplate === tpl.id ? null : tpl.id)
-                        }
-                        className="w-full relative block cursor-pointer"
-                      >
-                        <iframe
-                          srcDoc={buildPreviewDoc(defaultPreviews[tpl.id])}
-                          className="w-full h-[80px] pointer-events-none border-0"
-                          style={{ background: "#fff" }}
-                          title={tpl.name}
-                          tabIndex={-1}
-                          loading="lazy"
-                        />
-                        {/* Overlay with name */}
-                        <div className="absolute inset-0 flex items-end justify-start bg-gradient-to-t from-black/50 to-transparent p-2">
-                          <span className="text-white text-[11px] font-semibold drop-shadow-sm">{tpl.name}</span>
-                        </div>
-                      </button>
-                      {/* Info & insert */}
-                      <div className="bg-surface-secondary px-2.5 py-2 flex items-center justify-between gap-2">
-                        <span className="text-xs text-fg-muted truncate">{tpl.description}</span>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleInsert(tpl); }}
-                          className="shrink-0 px-2 py-1 bg-accent hover:bg-accent-hover text-white rounded text-[11px] font-medium transition-colors"
+                <div className="space-y-1">
+                  {templates.map((tpl) => {
+                    const isActive = activeTemplate === tpl.id;
+                    const Icon = TEMPLATE_ICONS[tpl.id] || MousePointerClick;
+                    const color = TEMPLATE_COLORS[tpl.id] || "#E8553A";
+
+                    return (
+                      <div key={tpl.id}>
+                        {/* Compact card row */}
+                        <div
+                          className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer transition-all group ${
+                            isActive
+                              ? "bg-surface-tertiary ring-1 ring-border-secondary"
+                              : "hover:bg-surface-tertiary/60"
+                          }`}
+                          onClick={() => setActiveTemplate(isActive ? null : tpl.id)}
                         >
-                          插入
-                        </button>
-                      </div>
-
-                      {activeTemplate === tpl.id && (
-                        <div className="mt-1 ml-2 space-y-2 border-l-2 border-accent-border pl-2">
-                          {tpl.fields.map((field) => {
-                            const config = getConfig(tpl);
-                            const value = config[field.key] ?? field.default;
-                            return (
-                              <div key={field.key}>
-                                <label className="text-[10px] text-fg-muted block mb-0.5">
-                                  {field.label}
-                                </label>
-                                {field.type === "textarea" ? (
-                                  <textarea
-                                    value={String(value)}
-                                    onChange={(e) =>
-                                      updateConfig(tpl.id, field.key, e.target.value)
-                                    }
-                                    rows={2}
-                                    className="w-full bg-bg-primary border border-border-primary rounded px-2 py-1 text-xs text-fg-primary outline-none focus:border-accent resize-none"
-                                  />
-                                ) : field.type === "color" ? (
-                                  <div className="flex items-center gap-1">
-                                    <input
-                                      type="color"
-                                      value={String(value)}
-                                      onChange={(e) =>
-                                        updateConfig(tpl.id, field.key, e.target.value)
-                                      }
-                                      className="w-6 h-6 rounded border border-border-primary cursor-pointer"
-                                    />
-                                    <input
-                                      type="text"
-                                      value={String(value)}
-                                      onChange={(e) =>
-                                        updateConfig(tpl.id, field.key, e.target.value)
-                                      }
-                                      className="flex-1 bg-bg-primary border border-border-primary rounded px-2 py-1 text-xs text-fg-primary outline-none focus:border-accent"
-                                    />
-                                  </div>
-                                ) : field.type === "number" ? (
-                                  <input
-                                    type="number"
-                                    value={Number(value)}
-                                    onChange={(e) =>
-                                      updateConfig(
-                                        tpl.id,
-                                        field.key,
-                                        parseFloat(e.target.value) || 0
-                                      )
-                                    }
-                                    className="w-full bg-bg-primary border border-border-primary rounded px-2 py-1 text-xs text-fg-primary outline-none focus:border-accent"
-                                  />
-                                ) : (
-                                  <input
-                                    type="text"
-                                    value={String(value)}
-                                    onChange={(e) =>
-                                      updateConfig(tpl.id, field.key, e.target.value)
-                                    }
-                                    className="w-full bg-bg-primary border border-border-primary rounded px-2 py-1 text-xs text-fg-primary outline-none focus:border-accent"
-                                  />
-                                )}
-                              </div>
-                            );
-                          })}
-
-                          <div className="flex gap-1 pt-1">
-                            <button
-                              onClick={() => handlePreview(tpl)}
-                              className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-surface-tertiary hover:bg-border-primary text-fg-secondary rounded text-[11px] transition-colors"
-                            >
-                              <Eye size={11} /> 预览
-                            </button>
-                            <button
-                              onClick={() => handleInsert(tpl)}
-                              className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-accent hover:bg-accent-hover text-white rounded text-[11px] transition-colors"
-                            >
-                              <PlusCircle size={11} /> 插入到文章
-                            </button>
+                          {/* Icon badge */}
+                          <div
+                            className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+                            style={{ backgroundColor: color + "1A" }}
+                          >
+                            <Icon size={14} style={{ color }} />
                           </div>
 
-                          {previewHtml && activeTemplate === tpl.id && (
-                            <div className="mt-2 border border-border-primary rounded overflow-hidden bg-white">
-                              <div className="text-[10px] text-fg-muted px-2 py-1 bg-surface-tertiary">
-                                预览
-                              </div>
-                              <iframe
-                                srcDoc={buildPreviewDoc(previewHtml)}
-                                className="w-full h-[160px] border-0"
-                                style={{ background: "#fff" }}
-                                title="preview"
-                              />
+                          {/* Text */}
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[12px] font-medium text-fg-primary leading-tight truncate">
+                              {tpl.name}
                             </div>
+                            <div className="text-[10px] text-fg-muted leading-tight truncate mt-0.5">
+                              {tpl.description}
+                            </div>
+                          </div>
+
+                          {/* Insert button */}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleInsert(tpl); }}
+                            className="shrink-0 w-6 h-6 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 bg-accent hover:bg-accent-hover text-white transition-all"
+                            title="插入到文章"
+                          >
+                            <PlusCircle size={12} />
+                          </button>
+
+                          {/* Expand indicator */}
+                          {isActive ? (
+                            <ChevronUp size={12} className="text-fg-muted shrink-0" />
+                          ) : (
+                            <ChevronDown size={12} className="text-fg-muted shrink-0 opacity-0 group-hover:opacity-60" />
                           )}
                         </div>
-                      )}
-                    </div>
-                  ))}
+
+                        {/* Expanded: config + live preview */}
+                        {isActive && (
+                          <div className="mt-1 ml-3.5 pl-3 border-l border-border-secondary space-y-2 pb-2">
+                            {/* Live preview */}
+                            <div className="rounded-lg overflow-hidden border border-border-secondary">
+                              <iframe
+                                srcDoc={buildPreviewDoc(activePreviewHtml)}
+                                className="w-full h-[140px] border-0"
+                                style={{ background: "#fff" }}
+                                title={`${tpl.name} 预览`}
+                              />
+                            </div>
+
+                            {/* Config fields */}
+                            <div className="space-y-1.5">
+                              {tpl.fields.map((field) => {
+                                const config = getConfig(tpl);
+                                const value = config[field.key] ?? field.default;
+                                return (
+                                  <div key={field.key}>
+                                    <label className="text-[10px] text-fg-muted block mb-0.5">
+                                      {field.label}
+                                    </label>
+                                    {field.type === "textarea" ? (
+                                      <textarea
+                                        value={String(value)}
+                                        onChange={(e) => updateConfig(tpl.id, field.key, e.target.value)}
+                                        rows={2}
+                                        className="w-full bg-bg-primary border border-border-primary rounded-md px-2 py-1 text-xs text-fg-primary outline-none focus:border-accent resize-none"
+                                      />
+                                    ) : field.type === "color" ? (
+                                      <div className="flex items-center gap-1.5">
+                                        <input
+                                          type="color"
+                                          value={String(value)}
+                                          onChange={(e) => updateConfig(tpl.id, field.key, e.target.value)}
+                                          className="w-6 h-6 rounded border border-border-primary cursor-pointer"
+                                        />
+                                        <input
+                                          type="text"
+                                          value={String(value)}
+                                          onChange={(e) => updateConfig(tpl.id, field.key, e.target.value)}
+                                          className="flex-1 bg-bg-primary border border-border-primary rounded-md px-2 py-1 text-xs text-fg-primary outline-none focus:border-accent font-mono"
+                                        />
+                                      </div>
+                                    ) : field.type === "number" ? (
+                                      <input
+                                        type="number"
+                                        value={Number(value)}
+                                        onChange={(e) => updateConfig(tpl.id, field.key, parseFloat(e.target.value) || 0)}
+                                        className="w-full bg-bg-primary border border-border-primary rounded-md px-2 py-1 text-xs text-fg-primary outline-none focus:border-accent"
+                                      />
+                                    ) : (
+                                      <input
+                                        type="text"
+                                        value={String(value)}
+                                        onChange={(e) => updateConfig(tpl.id, field.key, e.target.value)}
+                                        className="w-full bg-bg-primary border border-border-primary rounded-md px-2 py-1 text-xs text-fg-primary outline-none focus:border-accent"
+                                      />
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                            {/* Insert button */}
+                            <button
+                              onClick={() => handleInsert(tpl)}
+                              className="w-full flex items-center justify-center gap-1.5 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg text-[11px] font-medium transition-colors"
+                            >
+                              <PlusCircle size={12} />
+                              插入到文章
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );
