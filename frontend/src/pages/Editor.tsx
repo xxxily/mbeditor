@@ -151,7 +151,7 @@ export default function EditorPage() {
       {/* Three-column workspace */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left sidebar - 250px */}
-        <div className="w-[250px] shrink-0 bg-surface-secondary border-r border-border-primary flex flex-col overflow-y-auto">
+        <div className="w-[300px] shrink-0 bg-surface-secondary border-r border-border-primary flex flex-col overflow-y-auto">
           {/* Structure section header */}
           <div className="flex items-center justify-between px-3.5 pt-3.5 pb-2">
             <span className="font-mono text-[10px] font-semibold tracking-[1.5px] uppercase text-fg-muted">

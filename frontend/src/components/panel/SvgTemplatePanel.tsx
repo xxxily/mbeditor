@@ -51,10 +51,21 @@ function getDefaultConfig(tpl: SvgTemplate): Record<string, string | number> {
   return defaults;
 }
 
+/** Heights that work well for each template type */
+const TEMPLATE_PREVIEW_HEIGHT: Record<string, number> = {
+  accordion: 160,
+  "before-after": 200,
+  "flip-card": 260,
+  carousel: 240,
+  "fade-in-text": 140,
+  "press-reveal": 120,
+};
+
 function buildPreviewDoc(html: string): string {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-body{margin:0;padding:12px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;line-height:1.6;color:#333;}
+body{margin:0;padding:14px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;line-height:1.6;color:#333;overflow:hidden;}
 img{max-width:100%;border-radius:4px;}
+section{margin-top:0 !important;margin-bottom:0 !important;}
 </style></head><body>${html}</body></html>`;
 }
 
@@ -113,7 +124,7 @@ export default function SvgTemplatePanel({ onInsert }: SvgTemplatePanelProps) {
                 <div className="text-[10px] uppercase tracking-wider text-fg-muted mb-1.5 px-0.5">
                   {CATEGORY_LABELS[cat]}
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-2">
                   {templates.map((tpl) => {
                     const isActive = activeTemplate === tpl.id;
                     const Icon = TEMPLATE_ICONS[tpl.id] || MousePointerClick;
@@ -123,7 +134,7 @@ export default function SvgTemplatePanel({ onInsert }: SvgTemplatePanelProps) {
                       <div key={tpl.id}>
                         {/* Compact card row */}
                         <div
-                          className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer transition-all group ${
+                          className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg cursor-pointer transition-all group ${
                             isActive
                               ? "bg-surface-tertiary ring-1 ring-border-secondary"
                               : "hover:bg-surface-tertiary/60"
@@ -167,19 +178,25 @@ export default function SvgTemplatePanel({ onInsert }: SvgTemplatePanelProps) {
 
                         {/* Expanded: config + live preview */}
                         {isActive && (
-                          <div className="mt-1 ml-3.5 pl-3 border-l border-border-secondary space-y-2 pb-2">
-                            {/* Live preview */}
+                          <div className="mt-2 rounded-lg bg-surface-tertiary/40 p-3 space-y-3">
+                            {/* Live preview — full height, no scroll */}
                             <div className="rounded-lg overflow-hidden border border-border-secondary">
+                              <div className="text-[10px] text-fg-muted px-2.5 py-1 bg-surface-tertiary border-b border-border-secondary font-mono">
+                                效果预览
+                              </div>
                               <iframe
                                 srcDoc={buildPreviewDoc(activePreviewHtml)}
-                                className="w-full h-[140px] border-0"
-                                style={{ background: "#fff" }}
+                                className="w-full border-0"
+                                style={{
+                                  background: "#fff",
+                                  height: (TEMPLATE_PREVIEW_HEIGHT[tpl.id] || 180) + "px",
+                                }}
                                 title={`${tpl.name} 预览`}
                               />
                             </div>
 
                             {/* Config fields */}
-                            <div className="space-y-1.5">
+                            <div className="space-y-2">
                               {tpl.fields.map((field) => {
                                 const config = getConfig(tpl);
                                 const value = config[field.key] ?? field.default;
@@ -233,9 +250,9 @@ export default function SvgTemplatePanel({ onInsert }: SvgTemplatePanelProps) {
                             {/* Insert button */}
                             <button
                               onClick={() => handleInsert(tpl)}
-                              className="w-full flex items-center justify-center gap-1.5 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg text-[11px] font-medium transition-colors"
+                              className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-accent hover:bg-accent-hover text-white rounded-lg text-[12px] font-medium transition-colors"
                             >
-                              <PlusCircle size={12} />
+                              <PlusCircle size={13} />
                               插入到文章
                             </button>
                           </div>
