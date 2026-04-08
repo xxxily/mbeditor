@@ -113,11 +113,33 @@ const WechatPreview = forwardRef<WechatPreviewHandle, WechatPreviewProps>(
         const doc = iframe?.contentDocument;
         if (!doc?.body) return;
 
-        // Append to end
-        const wrapper = doc.createElement("div");
-        wrapper.innerHTML = normalizeImageStyles(newHtml);
-        while (wrapper.firstChild) {
-          doc.body.appendChild(wrapper.firstChild);
+        const processed = normalizeImageStyles(newHtml);
+        const sel = doc.getSelection();
+        let inserted = false;
+
+        // Try inserting at cursor position
+        if (sel && sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0);
+          // Verify cursor is inside our body
+          if (doc.body.contains(range.commonAncestorContainer)) {
+            range.deleteContents();
+            const temp = doc.createElement("div");
+            temp.innerHTML = processed;
+            const frag = doc.createDocumentFragment();
+            while (temp.firstChild) frag.appendChild(temp.firstChild);
+            range.insertNode(frag);
+            range.collapse(false);
+            inserted = true;
+          }
+        }
+
+        // Fallback: append to end
+        if (!inserted) {
+          const wrapper = doc.createElement("div");
+          wrapper.innerHTML = processed;
+          while (wrapper.firstChild) {
+            doc.body.appendChild(wrapper.firstChild);
+          }
         }
 
         // Notify parent

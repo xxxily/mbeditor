@@ -45,7 +45,7 @@ const accordion: SvgTemplate = {
     const content = config.content || "";
     const bgColor = config.bgColor || "#f5f5f5";
     const accentColor = config.accentColor || "#e8784a";
-    return `<section style="margin:16px 0;">
+    return `<section contenteditable="false" style="margin:16px 0;">
 <style>
   #acc${id}:checked ~ .acc-body${id} { max-height:800px; opacity:1; }
   #acc${id}:checked ~ .acc-lbl${id} .acc-arrow${id} { transform:rotate(180deg); }
@@ -84,7 +84,7 @@ const beforeAfter: SvgTemplate = {
     const btnText = config.buttonText || "点击对比";
     const beforeTextColor = isLightColor(String(beforeColor)) ? "#333" : "#fff";
     const afterTextColor = isLightColor(String(afterColor)) ? "#333" : "#fff";
-    return `<section style="margin:16px 0;position:relative;">
+    return `<section contenteditable="false" style="margin:16px 0;position:relative;">
 <style>
   #ba${id}:checked ~ .ba-wrap${id} .ba-after${id} { opacity:1; }
   #ba${id}:checked ~ .ba-wrap${id} .ba-before${id} { opacity:0; }
@@ -123,20 +123,19 @@ const flipCard: SvgTemplate = {
     const backBg = config.backBg || "#2c3e50";
     const w = config.width || 300;
     const h = config.height || 200;
-    return `<section style="margin:16px auto;perspective:800px;width:${w}px;max-width:100%;">
+    return `<section contenteditable="false" style="margin:16px auto;perspective:800px;width:${w}px;max-width:100%;">
 <style>
   #flip${id}:checked ~ .flip-inner${id} { transform:rotateY(180deg); }
-  .flip-inner${id} { position:relative;width:100%;height:${h}px;transition:transform 0.6s;transform-style:preserve-3d; }
-  .flip-front${id}, .flip-back${id} { position:absolute;width:100%;height:100%;backface-visibility:hidden;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:16px;line-height:1.6;padding:16px;box-sizing:border-box;text-align:center;color:#fff; }
+  .flip-inner${id} { position:relative;width:100%;height:${h}px;transition:transform 0.6s;transform-style:preserve-3d;cursor:pointer; }
+  .flip-front${id}, .flip-back${id} { position:absolute;width:100%;height:100%;-webkit-backface-visibility:hidden;backface-visibility:hidden;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:16px;line-height:1.6;padding:16px;box-sizing:border-box;text-align:center;color:#fff; }
   .flip-back${id} { transform:rotateY(180deg); }
 </style>
 <input type="checkbox" id="flip${id}" style="display:none;" />
-<label for="flip${id}" style="display:block;cursor:pointer;">
-  <section class="flip-inner${id}">
-    <section class="flip-front${id}" style="background:${frontBg};">${frontText}</section>
-    <section class="flip-back${id}" style="background:${backBg};">${backText}</section>
-  </section>
-</label>
+<label for="flip${id}" style="display:block;position:absolute;width:100%;height:${h}px;cursor:pointer;z-index:2;"></label>
+<section class="flip-inner${id}">
+  <section class="flip-front${id}" style="background:${frontBg};">${frontText}</section>
+  <section class="flip-back${id}" style="background:${backBg};">${backText}</section>
+</section>
 </section>`;
   },
 };
@@ -164,15 +163,17 @@ const carousel: SvgTemplate = {
     const c2 = config.color2 || "#2c3e50";
     const c3 = config.color3 || "#27ae60";
     const ic = config.indicatorColor || "#e8784a";
-    const slideStyle = "padding:40px 24px;text-align:center;font-size:20px;font-weight:bold;color:#fff;min-height:120px;display:flex;align-items:center;justify-content:center;";
-    return `<section style="margin:16px 0;overflow:hidden;border-radius:8px;">
+    const slideStyle = "padding:40px 24px;text-align:center;font-size:20px;font-weight:bold;color:#fff;min-height:140px;display:flex;align-items:center;justify-content:center;scroll-snap-align:start;flex-shrink:0;width:100%;box-sizing:border-box;";
+    return `<section contenteditable="false" style="margin:16px 0;border-radius:8px;overflow:hidden;">
 <style>
-  .car-track${id} { display:flex;transition:transform 0.4s ease;width:300%; }
-  .car-slide${id} { width:33.333%;flex-shrink:0; }
-  #car1${id}:checked ~ .car-wrap${id} .car-track${id} { transform:translateX(0); }
-  #car2${id}:checked ~ .car-wrap${id} .car-track${id} { transform:translateX(-33.333%); }
-  #car3${id}:checked ~ .car-wrap${id} .car-track${id} { transform:translateX(-66.666%); }
-  .car-dots${id} label { display:inline-block;width:10px;height:10px;border-radius:50%;background:#ccc;margin:0 4px;cursor:pointer;transition:background 0.3s; }
+  .car-track${id} {
+    display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;scroll-behavior:smooth;
+  }
+  .car-track${id}::-webkit-scrollbar { display:none; }
+  .car-dots${id} label {
+    display:inline-block;width:10px;height:10px;border-radius:50%;background:#ccc;margin:0 4px;cursor:pointer;transition:background 0.3s;
+  }
   #car1${id}:checked ~ .car-dots${id} label[for="car1${id}"],
   #car2${id}:checked ~ .car-dots${id} label[for="car2${id}"],
   #car3${id}:checked ~ .car-dots${id} label[for="car3${id}"] { background:${ic}; }
@@ -180,17 +181,15 @@ const carousel: SvgTemplate = {
 <input type="radio" name="car${id}" id="car1${id}" checked style="display:none;" />
 <input type="radio" name="car${id}" id="car2${id}" style="display:none;" />
 <input type="radio" name="car${id}" id="car3${id}" style="display:none;" />
-<section class="car-wrap${id}" style="overflow:hidden;">
-  <section class="car-track${id}">
-    <section class="car-slide${id}"><section style="${slideStyle}background:${c1};">${text1}</section></section>
-    <section class="car-slide${id}"><section style="${slideStyle}background:${c2};">${text2}</section></section>
-    <section class="car-slide${id}"><section style="${slideStyle}background:${c3};">${text3}</section></section>
-  </section>
+<section class="car-track${id}" id="carTrack${id}">
+  <section id="carSlide1${id}" style="${slideStyle}background:${c1};">${text1}</section>
+  <section id="carSlide2${id}" style="${slideStyle}background:${c2};">${text2}</section>
+  <section id="carSlide3${id}" style="${slideStyle}background:${c3};">${text3}</section>
 </section>
 <section class="car-dots${id}" style="text-align:center;padding:10px 0;">
-  <label for="car1${id}"></label>
-  <label for="car2${id}"></label>
-  <label for="car3${id}"></label>
+  <label for="car1${id}" onclick="document.getElementById('carSlide1${id}').scrollIntoView({behavior:'smooth',block:'nearest',inline:'start'})"></label>
+  <label for="car2${id}" onclick="document.getElementById('carSlide2${id}').scrollIntoView({behavior:'smooth',block:'nearest',inline:'start'})"></label>
+  <label for="car3${id}" onclick="document.getElementById('carSlide3${id}').scrollIntoView({behavior:'smooth',block:'nearest',inline:'start'})"></label>
 </section>
 </section>`;
   },
@@ -215,14 +214,35 @@ const fadeInText: SvgTemplate = {
     const line3 = config.line3 || "";
     const color = config.color || "#333";
     const delay = Number(config.delay) || 0.5;
-    return `<section style="margin:16px 0;">
+    return `<section contenteditable="false" style="margin:16px 0;" id="fiWrap${id}">
 <style>
-  @keyframes fadeIn${id} { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
-  .fi-line${id} { opacity:0; animation:fadeIn${id} 0.6s ease forwards; font-size:18px; line-height:2; color:${color}; }
+  @keyframes fadeIn${id} { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+  .fi-line${id} { opacity:0; font-size:18px; line-height:2; color:${color}; }
+  .fi-line${id}.fi-visible${id} { animation:fadeIn${id} 0.6s ease forwards; }
 </style>
 <section class="fi-line${id}" style="animation-delay:${delay * 0}s;">${line1}</section>
 <section class="fi-line${id}" style="animation-delay:${delay * 1}s;">${line2}</section>
 <section class="fi-line${id}" style="animation-delay:${delay * 2}s;">${line3}</section>
+<script>
+(function(){
+  var wrap=document.getElementById('fiWrap${id}');
+  if(!wrap)return;
+  var lines=wrap.querySelectorAll('.fi-line${id}');
+  if('IntersectionObserver' in window){
+    var obs=new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){
+          lines.forEach(function(l){l.classList.add('fi-visible${id}');});
+          obs.disconnect();
+        }
+      });
+    },{threshold:0.2});
+    obs.observe(wrap);
+  } else {
+    lines.forEach(function(l){l.classList.add('fi-visible${id}');});
+  }
+})();
+<\/script>
 </section>`;
   },
 };
@@ -242,7 +262,7 @@ const pressReveal: SvgTemplate = {
     const coverText = config.coverText || "长按查看";
     const hiddenText = config.hiddenText || "";
     const bgColor = config.bgColor || "#f0f0f0";
-    return `<section style="margin:16px 0;">
+    return `<section contenteditable="false" style="margin:16px 0;">
 <style>
   .pr-wrap${id} { position:relative;padding:24px 16px;background:${bgColor};border-radius:8px;text-align:center;cursor:pointer;user-select:none;-webkit-user-select:none; }
   .pr-cover${id} { font-size:16px;color:#999;transition:opacity 0.3s; }

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { FileText } from "lucide-react";
-import MonacoEditor from "@/components/editor/MonacoEditor";
+import MonacoEditor, { type MonacoEditorHandle } from "@/components/editor/MonacoEditor";
 import MarkdownEditor from "@/components/editor/MarkdownEditor";
 import EditorTabs from "@/components/editor/EditorTabs";
 import WechatPreview from "@/components/preview/WechatPreview";
@@ -39,6 +39,8 @@ export default function EditorPage() {
   const [publishOpen, setPublishOpen] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previewRef = useRef<WechatPreviewHandle>(null);
+  const htmlEditorRef = useRef<MonacoEditorHandle>(null);
+  const mdEditorRef = useRef<MonacoEditorHandle>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -76,7 +78,11 @@ export default function EditorPage() {
     if (!article) return;
     const imgTag = `<img src="${url}" style="max-width:100%;border-radius:8px;" />`;
     if (article.mode === "markdown") {
-      updateField("markdown", article.markdown + "\n\n" + imgTag + "\n");
+      if (mdEditorRef.current) {
+        mdEditorRef.current.insertAtCursor("\n\n" + imgTag + "\n");
+      } else {
+        updateField("markdown", article.markdown + "\n\n" + imgTag + "\n");
+      }
     } else if (previewRef.current) {
       previewRef.current.insertHtml(imgTag);
     } else {
@@ -87,8 +93,11 @@ export default function EditorPage() {
   const handleInsertSvg = (svgHtml: string) => {
     if (!article) return;
     if (article.mode === "markdown") {
-      // Markdown 中直接插入 HTML 块（需要前后空行）
-      updateField("markdown", article.markdown + "\n\n" + svgHtml + "\n");
+      if (mdEditorRef.current) {
+        mdEditorRef.current.insertAtCursor("\n\n" + svgHtml + "\n");
+      } else {
+        updateField("markdown", article.markdown + "\n\n" + svgHtml + "\n");
+      }
     } else if (previewRef.current) {
       previewRef.current.insertHtml(svgHtml);
     } else {
@@ -249,6 +258,7 @@ export default function EditorPage() {
                     />
                     <div className="flex-1">
                       <MonacoEditor
+                        ref={htmlEditorRef}
                         value={editorValue}
                         onChange={(v) => updateField(activeTab as keyof Article, v)}
                         language={LANG_MAP[activeTab] || "html"}
@@ -262,6 +272,7 @@ export default function EditorPage() {
                     </div>
                     <div className="flex-1">
                       <MarkdownEditor
+                        ref={mdEditorRef}
                         value={article.markdown}
                         onChange={(v) => updateField("markdown", v)}
                       />

@@ -1,10 +1,15 @@
-import MonacoEditor from "./MonacoEditor";
+import { forwardRef } from "react";
+import MonacoEditor, { type MonacoEditorHandle } from "./MonacoEditor";
 
 interface MarkdownEditorProps {
   value: string;
   onChange: (value: string) => void;
 }
 
-export default function MarkdownEditor({ value, onChange }: MarkdownEditorProps) {
-  return <MonacoEditor value={value} onChange={onChange} language="markdown" />;
-}
+const MarkdownEditor = forwardRef<MonacoEditorHandle, MarkdownEditorProps>(
+  function MarkdownEditor({ value, onChange }, ref) {
+    return <MonacoEditor ref={ref} value={value} onChange={onChange} language="markdown" />;
+  },
+);
+
+export default MarkdownEditor;
