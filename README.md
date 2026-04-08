@@ -131,7 +131,7 @@ cp skill/SKILL.md ~/.claude/skills/wechat-editor.md
 
 ## 排版示例
 
-MBEditor + AI 可以用自然语言生成任意风格的排版。以下是内置的 6 种模板：
+MBEditor + AI 可以用自然语言生成任意风格的排版。
 
 <table>
 <tr>
