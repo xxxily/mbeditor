@@ -98,6 +98,23 @@ claude "写一篇关于 MBEditor 的推文，杂志风排版，推到草稿箱"
 cp skill/SKILL.md ~/.claude/skills/wechat-editor.md
 ```
 
+## 推荐搭配 Skill
+
+MBEditor 负责编辑和发布，排版设计和内容风格可以搭配以下 Skill 使用（仅供参考）：
+
+| Skill | 用途 | 链接 |
+|-------|------|------|
+| **Anthropic Frontend Design** | 排版设计风格 — 生成高质量、有设计感的 HTML 排版，告别 AI 味 | [anthropics/skills/frontend-design](https://github.com/anthropics/skills/tree/main/skills/frontend-design) |
+| **Khazix Skills** | 内容写作风格 — 公众号长文写作，个人风格化的内容输出 | [KKKKhazix/khazix-skills](https://github.com/KKKKhazix/khazix-skills) |
+
+```bash
+# 安装示例（Claude Code）
+claude install-skill https://github.com/anthropics/skills/tree/main/skills/frontend-design
+claude install-skill https://github.com/KKKKhazix/khazix-skills
+```
+
+> 搭配使用：让 Khazix Skill 负责内容创作，Frontend Design Skill 负责排版风格，MBEditor 负责预览和发布到公众号。三者配合实现从写作到发布的全链路自动化。
+
 ## 编辑器功能
 
 ![预览模式](docs/screenshots/preview-v2.png)
