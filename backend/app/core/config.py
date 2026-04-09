@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings
 
 
-APP_VERSION = "3.0.0"
+APP_VERSION = "3.0"
 GITHUB_REPO = "AAAAAnson/mbeditor"
 
 

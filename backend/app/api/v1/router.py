@@ -46,7 +46,14 @@ async def check_version():
         except Exception:
             latest = ""
 
-    has_update = bool(latest and latest != APP_VERSION)
+    # Normalize: strip trailing .0 segments so "3.0" == "3.0.0"
+    def _norm(v: str) -> str:
+        parts = v.split(".")
+        while len(parts) > 1 and parts[-1] == "0":
+            parts.pop()
+        return ".".join(parts)
+
+    has_update = bool(latest and _norm(latest) != _norm(APP_VERSION))
     return success({
         "current": APP_VERSION,
         "latest": latest or APP_VERSION,
