@@ -5,6 +5,7 @@ import type { Article } from "@/types";
 
 interface ActionPanelProps {
   article: Article;
+  processedHtml?: string;
 }
 
 /** Copy rich text HTML to clipboard */
@@ -40,7 +41,7 @@ async function copyHtmlToClipboard(html: string): Promise<boolean> {
   }
 }
 
-export default function ActionPanel({ article }: ActionPanelProps) {
+export default function ActionPanel({ article, processedHtml }: ActionPanelProps) {
   const [copyMsg, setCopyMsg] = useState("");
   const [publishMsg, setPublishMsg] = useState("");
   const [publishing, setPublishing] = useState(false);
@@ -50,17 +51,23 @@ export default function ActionPanel({ article }: ActionPanelProps) {
     setCopying(true);
     setCopyMsg("");
     try {
-      const res = await api.post("/publish/preview", {
-        html: article.html,
-        css: article.css,
-      });
-      if (res.data.code === 0) {
-        const inlinedHtml = res.data.data.html;
-        const ok = await copyHtmlToClipboard(inlinedHtml);
-        setCopyMsg(ok ? "已复制! CSS已inline化" : "复制失败");
-      } else {
-        setCopyMsg(res.data.message);
+      let html = processedHtml;
+      if (!html) {
+        // Fallback: call backend if processedHtml not yet available
+        const res = await api.post("/publish/preview", {
+          html: article.html,
+          css: article.css,
+        });
+        if (res.data.code === 0) {
+          html = res.data.data.html;
+        } else {
+          setCopyMsg(res.data.message);
+          setCopying(false);
+          return;
+        }
       }
+      const ok = await copyHtmlToClipboard(html!);
+      setCopyMsg(ok ? "已复制!" : "复制失败");
     } catch {
       setCopyMsg("复制失败");
     }

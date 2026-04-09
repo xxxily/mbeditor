@@ -41,6 +41,9 @@ export default function EditorPage() {
   const previewRef = useRef<WechatPreviewHandle>(null);
   const htmlEditorRef = useRef<MonacoEditorHandle>(null);
   const mdEditorRef = useRef<MonacoEditorHandle>(null);
+  const processTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isFirstProcess = useRef(true);
+  const [processedHtml, setProcessedHtml] = useState("");
 
   useEffect(() => {
     if (!id) return;
@@ -125,6 +128,46 @@ export default function EditorPage() {
     return chinese + english;
   }, [article]);
 
+  // Memoize raw preview data for processing pipeline
+  const rawPreview = useMemo(() => {
+    if (!article) return { html: "", css: "", js: "" };
+    const html = article.mode === "markdown"
+      ? renderMarkdown(article.markdown, mdTheme)
+      : extractHTML(article.html);
+    return {
+      html,
+      css: article.mode === "markdown" ? "" : article.css,
+      js: article.mode === "markdown" ? "" : article.js,
+    };
+  }, [article?.mode, article?.markdown, article?.html, article?.css, article?.js, mdTheme]);
+
+  // WYSIWYG: debounced backend processing ensures preview matches copy output
+  useEffect(() => {
+    if (!rawPreview.html.trim()) {
+      setProcessedHtml("");
+      return;
+    }
+    const delay = isFirstProcess.current ? 100 : 1500;
+    if (processTimer.current) clearTimeout(processTimer.current);
+    processTimer.current = setTimeout(async () => {
+      try {
+        const res = await api.post("/publish/preview", {
+          html: rawPreview.html,
+          css: rawPreview.css,
+        });
+        if (res.data.code === 0) {
+          setProcessedHtml(res.data.data.html);
+          isFirstProcess.current = false;
+        }
+      } catch {
+        // On error, keep showing raw HTML
+      }
+    }, delay);
+    return () => {
+      if (processTimer.current) clearTimeout(processTimer.current);
+    };
+  }, [rawPreview.html, rawPreview.css]);
+
   if (!article) {
     return (
       <div className="flex items-center justify-center h-full bg-bg-primary">
@@ -134,13 +177,10 @@ export default function EditorPage() {
   }
 
   const editorValue = (article[activeTab as keyof Article] as string) || "";
-  const extractedHtml =
-    article.mode === "markdown"
-      ? renderMarkdown(article.markdown, mdTheme)
-      : extractHTML(article.html);
-  const previewHtml = extractedHtml;
-  const previewCss = article.mode === "markdown" ? "" : article.css;
-  const previewJs = article.mode === "markdown" ? "" : article.js;
+  // When processed HTML is ready, show it (WYSIWYG); otherwise fall back to raw
+  const previewHtml = processedHtml || rawPreview.html;
+  const previewCss = processedHtml ? "" : rawPreview.css;
+  const previewJs = processedHtml ? "" : rawPreview.js;
 
   const showCode = viewMode === "code" || viewMode === "split";
   const showPreview = viewMode === "preview" || viewMode === "split";
@@ -314,7 +354,8 @@ export default function EditorPage() {
           {/* Action buttons section */}
           <div className="flex-1">
             <ActionPanel
-              article={{ ...article, html: previewHtml, css: previewCss }}
+              article={{ ...article, html: rawPreview.html, css: rawPreview.css }}
+              processedHtml={processedHtml}
             />
           </div>
 

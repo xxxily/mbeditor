@@ -14,7 +14,6 @@ router = APIRouter(prefix="/publish", tags=["publish"])
 
 # Base styles matching the preview iframe — ensures WYSIWYG between preview and publish
 _WECHAT_BASE_CSS = """
-section { margin: 0; padding: 0; }
 body, section.wechat-root {
     font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
     font-size: 16px;
