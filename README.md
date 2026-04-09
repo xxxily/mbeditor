@@ -67,6 +67,16 @@ docker compose up -d
 - **编辑器界面**：http://localhost:7073
 - **API 接口**：http://localhost:7072/api/v1
 
+**已部署过的用户升级到最新版：**
+
+```bash
+cd mbeditor
+git pull
+docker compose up --build -d
+```
+
+> 升级不会丢失数据，文章和图片存储在 `data/` 目录中，不受容器重建影响。
+
 ### 第二步：安装 AI Agent Skill
 
 MBEditor 提供了 `skill/mbeditor.skill.md`，安装后 Agent 就能直接操控编辑器。根据你使用的 Agent 选择对应方式：
