@@ -200,10 +200,11 @@ def screenshot_wechat_draft(
         page.goto(_DRAFT_LIST_URL, wait_until="networkidle", timeout=30_000)
 
         # Check if we are still logged in (WeChat MP redirects to login page if not)
-        if "mp.weixin.qq.com/cgi-bin" not in page.url and "login" in page.url.lower():
+        if "mp.weixin.qq.com/cgi-bin" not in page.url:
             browser.close()
             raise RuntimeError(
-                "WeChat login expired, re-run auth_login"
+                f"WeChat session expired or not logged in (landed on {page.url}). "
+                "Re-run auth_login."
             )
 
         if _DRAFT_PREVIEW_SELECTOR:
@@ -211,10 +212,11 @@ def screenshot_wechat_draft(
             try:
                 page.click(_DRAFT_PREVIEW_SELECTOR, timeout=5_000)
                 page.wait_for_load_state("networkidle", timeout=15_000)
-            except Exception:
+            except Exception as exc:
+                browser.close()
                 raise RuntimeError(
-                    "WeChat login expired, re-run auth_login"
-                )
+                    f"Draft preview selector not found or click timed out: {exc}"
+                ) from exc
 
         # Screenshot whatever page we landed on
         page.screenshot(path=str(out_path), full_page=True)
