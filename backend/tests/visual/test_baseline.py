@@ -84,8 +84,12 @@ def _make_baseline_doc():
 
 
 def test_baseline_editor_screenshot_is_deterministic(tmp_path):
-    """两次调用 render_mbdoc_to_screenshot 返回逐字节相同的 PNG。"""
-    from tests.visual.infrastructure import render_mbdoc_to_screenshot
+    """两次调用 render_mbdoc_to_screenshot 返回像素级相同的 PNG。
+
+    Uses diff_images with zero tolerance rather than byte-equality because PNG
+    encoders embed non-deterministic metadata chunks.
+    """
+    from tests.visual.infrastructure import diff_images, render_mbdoc_to_screenshot
 
     doc = _make_baseline_doc()
 
@@ -94,20 +98,17 @@ def test_baseline_editor_screenshot_is_deterministic(tmp_path):
     out_a.mkdir()
     out_b.mkdir()
 
-    path_a = render_mbdoc_to_screenshot(doc, out_dir=out_a)
-    path_b = render_mbdoc_to_screenshot(doc, out_dir=out_b)
+    png_a = render_mbdoc_to_screenshot(doc, out_dir=out_a)
+    png_b = render_mbdoc_to_screenshot(doc, out_dir=out_b)
 
-    assert path_a.exists(), f"第一次截图未生成: {path_a}"
-    assert path_b.exists(), f"第二次截图未生成: {path_b}"
+    assert png_a.exists(), f"第一次截图未生成: {png_a}"
+    assert png_b.exists(), f"第二次截图未生成: {png_b}"
 
-    bytes_a = path_a.read_bytes()
-    bytes_b = path_b.read_bytes()
-
-    assert bytes_a == bytes_b, (
-        f"两次截图内容不同！\n"
-        f"  第一次: {path_a} ({len(bytes_a)} bytes)\n"
-        f"  第二次: {path_b} ({len(bytes_b)} bytes)\n"
-        "截图应逐字节相等（渲染必须是确定性的）。"
+    diff = diff_images(png_a, png_b, tolerance=0.0)
+    assert diff["diff_pct"] == 0.0, (
+        f"Editor screenshot not deterministic across calls: "
+        f"diff_pct={diff['diff_pct']}, diff_pixels={diff['diff_pixels']} "
+        f"(a={png_a}, b={png_b})"
     )
 
 
@@ -154,12 +155,21 @@ _skip_reason = _SKIP_REASON_AUTH if not _AUTH_STATE_EXISTS else _SKIP_REASON_ENV
 
 @pytest.mark.skipif(_should_skip_wechat, reason=_skip_reason)
 def test_baseline_wechat_parity(tmp_path):
-    """编辑器截图与微信草稿截图的像素差 < 0.5%。
+    """Assert editor screenshot matches WeChat draft screenshot within 0.5%.
 
-    依赖：
-      - .auth/state.json 存在（事先运行 auth_login.py 完成扫码）
-      - 环境变量 MBEDITOR_RUN_REAL_WECHAT_TESTS=1
-      - data/config.json 配置 MB 科技测试号凭证
+    KNOWN LIMITATION: infrastructure.screenshot_wechat_draft currently uses
+    _DRAFT_PREVIEW_SELECTOR = None, which causes it to screenshot the full
+    draft LIST page rather than the specific draft identified by media_id.
+    Until that selector is resolved (via playwright codegen after initial
+    auth_login), this test is EXPECTED TO FAIL with a large diff_pct when
+    enabled. Running this test end-to-end requires:
+
+    1. python backend/tests/visual/auth_login.py   (one-time QR scan)
+    2. Resolve _DRAFT_PREVIEW_SELECTOR in infrastructure.py via codegen
+    3. MBEDITOR_RUN_REAL_WECHAT_TESTS=1 pytest backend/tests/visual/test_baseline.py::test_baseline_wechat_parity
+
+    This test is intentionally gated behind both an auth file AND an env
+    var to prevent accidental WeChat API calls during unrelated test runs.
     """
     from tests.visual.infrastructure import (
         diff_images,
