@@ -1,0 +1,197 @@
+"""Baseline 视觉一致性测试 — MBEditor ↔ 公众号草稿.
+
+包含 3 个测试：
+  1. editor_screenshot_is_deterministic  — 纯本地，截图可重现性
+  2. dom_shape_has_no_class_or_style_tag — 纯本地，render_for_wechat 输出不变量
+  3. wechat_parity                        — 真实像素对比，需登录状态 + 环境变量
+
+Run (local only):
+    cd backend && python -m pytest tests/visual/test_baseline.py -q
+"""
+
+import os
+from pathlib import Path
+
+import pytest
+
+# ---------------------------------------------------------------------------
+# Baseline MBDoc fixture
+# ---------------------------------------------------------------------------
+
+_AUTH_STATE_PATH = Path(__file__).parent / ".auth" / "state.json"
+
+_AUTH_STATE_EXISTS = _AUTH_STATE_PATH.exists()
+_REAL_WECHAT_ENABLED = os.environ.get("MBEDITOR_RUN_REAL_WECHAT_TESTS") == "1"
+
+
+def _make_baseline_doc():
+    """构造 baseline MBDoc：H1-H6 各一个 + 3 个中文段落。"""
+    from app.models.mbdoc import (
+        BlockType,
+        HeadingBlock,
+        MBDoc,
+        MBDocMeta,
+        ParagraphBlock,
+    )
+
+    return MBDoc(
+        id="baseline-visual-parity-v1",
+        version="1",
+        meta=MBDocMeta(
+            title="Baseline 视觉一致性测试",
+            author="MBEditor",
+            digest="验证编辑器与公众号草稿的视觉一致性",
+        ),
+        blocks=[
+            HeadingBlock(id="h1-block", level=1, text="H1 — 一级标题"),
+            HeadingBlock(id="h2-block", level=2, text="H2 — 二级标题"),
+            HeadingBlock(id="h3-block", level=3, text="H3 — 三级标题"),
+            HeadingBlock(id="h4-block", level=4, text="H4 — 四级标题"),
+            HeadingBlock(id="h5-block", level=5, text="H5 — 五级标题"),
+            HeadingBlock(id="h6-block", level=6, text="H6 — 六级标题"),
+            ParagraphBlock(
+                id="p1-block",
+                text=(
+                    "微信公众号的排版对字体渲染要求较高，尤其是在不同操作系统和手机品牌之间，"
+                    "字形、字重、行距的细微差异都可能导致视觉上的不一致。"
+                    "本段用于检验编辑器预览与公众号实际推文之间的字体渲染是否吻合。"
+                ),
+            ),
+            ParagraphBlock(
+                id="p2-block",
+                text=(
+                    "标点符号的处理也是中文排版的重点之一：全角逗号、句号、书名号、引号等"
+                    "在不同渲染环境下的字宽和对齐方式可能存在差异。"
+                    "通过视觉对比测试，我们可以量化这些差异并持续改进渲染一致性。"
+                ),
+            ),
+            ParagraphBlock(
+                id="p3-block",
+                text=(
+                    "行间距和段间距直接影响文章的可读性与美观度。"
+                    "编辑器采用 line-height: 1.8 作为默认行高，"
+                    "段落之间通过 margin-bottom 保持适当的视觉间隔，"
+                    "以确保长篇图文在手机屏幕上具有良好的阅读体验。"
+                ),
+            ),
+        ],
+    )
+
+
+# ---------------------------------------------------------------------------
+# Test 1: 截图可重现性（纯本地）
+# ---------------------------------------------------------------------------
+
+
+def test_baseline_editor_screenshot_is_deterministic(tmp_path):
+    """两次调用 render_mbdoc_to_screenshot 返回逐字节相同的 PNG。"""
+    from tests.visual.infrastructure import render_mbdoc_to_screenshot
+
+    doc = _make_baseline_doc()
+
+    out_a = tmp_path / "run_a"
+    out_b = tmp_path / "run_b"
+    out_a.mkdir()
+    out_b.mkdir()
+
+    path_a = render_mbdoc_to_screenshot(doc, out_dir=out_a)
+    path_b = render_mbdoc_to_screenshot(doc, out_dir=out_b)
+
+    assert path_a.exists(), f"第一次截图未生成: {path_a}"
+    assert path_b.exists(), f"第二次截图未生成: {path_b}"
+
+    bytes_a = path_a.read_bytes()
+    bytes_b = path_b.read_bytes()
+
+    assert bytes_a == bytes_b, (
+        f"两次截图内容不同！\n"
+        f"  第一次: {path_a} ({len(bytes_a)} bytes)\n"
+        f"  第二次: {path_b} ({len(bytes_b)} bytes)\n"
+        "截图应逐字节相等（渲染必须是确定性的）。"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Test 2: DOM 输出不含 class/style 标签（纯本地）
+# ---------------------------------------------------------------------------
+
+
+def test_baseline_dom_shape_has_no_class_or_style_tag():
+    """render_for_wechat 输出不含 <style>、<script>、class=、<link> 字符串。
+
+    这是 render_for_wechat docstring 中的不变量守护测试。
+    """
+    from app.services.block_registry import RenderContext
+    from app.services.render_for_wechat import render_for_wechat
+
+    doc = _make_baseline_doc()
+    ctx = RenderContext(upload_images=False)
+    html = render_for_wechat(doc, ctx)
+
+    forbidden = ["<style>", "<style ", "<script>", "<script ", "<link", "class="]
+    violations = [token for token in forbidden if token in html]
+
+    assert not violations, (
+        f"render_for_wechat 输出包含被禁止的标记: {violations}\n"
+        f"--- 输出片段（前 500 字符）---\n{html[:500]}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Test 3: 编辑器 ↔ 公众号草稿像素对比（需登录 + 环境变量）
+# ---------------------------------------------------------------------------
+
+_SKIP_REASON_AUTH = "run auth_login.py first to create .auth/state.json"
+_SKIP_REASON_ENV = (
+    "set MBEDITOR_RUN_REAL_WECHAT_TESTS=1 to enable real WeChat calls "
+    "(requires valid MB 科技 credentials in data/config.json)"
+)
+
+# 只要其一条件不满足就 skip
+_should_skip_wechat = not _AUTH_STATE_EXISTS or not _REAL_WECHAT_ENABLED
+_skip_reason = _SKIP_REASON_AUTH if not _AUTH_STATE_EXISTS else _SKIP_REASON_ENV
+
+
+@pytest.mark.skipif(_should_skip_wechat, reason=_skip_reason)
+def test_baseline_wechat_parity(tmp_path):
+    """编辑器截图与微信草稿截图的像素差 < 0.5%。
+
+    依赖：
+      - .auth/state.json 存在（事先运行 auth_login.py 完成扫码）
+      - 环境变量 MBEDITOR_RUN_REAL_WECHAT_TESTS=1
+      - data/config.json 配置 MB 科技测试号凭证
+    """
+    from tests.visual.infrastructure import (
+        diff_images,
+        push_mbdoc_to_wechat_draft,
+        render_mbdoc_to_screenshot,
+        screenshot_wechat_draft,
+    )
+
+    doc = _make_baseline_doc()
+
+    # 步骤 1：渲染编辑器截图
+    editor_png = render_mbdoc_to_screenshot(doc, out_dir=tmp_path)
+
+    # 步骤 2：推送到微信草稿，获取 media_id
+    media_id = push_mbdoc_to_wechat_draft(doc)
+
+    # 步骤 3：截取微信草稿页面
+    draft_png = screenshot_wechat_draft(media_id, out_dir=tmp_path)
+
+    # 步骤 4：像素级对比
+    result = diff_images(editor_png, draft_png, tolerance=0.005)
+
+    # 步骤 5：打印结果供 debug
+    print(f"\n[wechat_parity] diff result: {result}")
+
+    # 步骤 6：断言
+    assert result["diff_pct"] < 0.005, (
+        f"编辑器 ↔ 公众号草稿像素差超过 0.5%！\n"
+        f"  diff_pct    = {result['diff_pct']:.4%}\n"
+        f"  diff_pixels = {result['diff_pixels']} / {result['total_pixels']}\n"
+        f"  diff_image  = {result['diff_image_path']}\n"
+        f"  editor_png  = {editor_png}\n"
+        f"  draft_png   = {draft_png}\n"
+        f"  full result = {result}"
+    )
