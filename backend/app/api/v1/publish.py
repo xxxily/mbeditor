@@ -504,21 +504,28 @@ def _sanitize_for_wechat(html: str) -> str:
             r'background-color:\1\2', s,
         )
 
-        # display: flex/inline-flex/grid/inline-grid → inline-block fallback
-        s = re.sub(r'display\s*:\s*(?:inline-)?flex\b', 'display:inline-block', s)
-        s = re.sub(r'display\s*:\s*(?:inline-)?grid\b', 'display:block', s)
-        s = re.sub(r'grid-template-[\w-]+\s*:[^;]+;?\s*', '', s)
-        s = re.sub(r'(?:flex|justify|align)-[\w-]+\s*:[^;]+;?\s*', '', s)
-        s = re.sub(r'gap\s*:[^;]+;?\s*', '', s)
+        # display: flex/grid — KEEP as-is. WeChat's draft edit view runs
+        # Chromium ProseMirror and fully supports grid/flex (verified
+        # 2026-04-12: pain-grid 2-col, brands 4-col, promises 3-col all
+        # activated correctly with computed gridTemplateColumns matching).
+        # The old downgrade (flex→inline-block, grid→block) was based on
+        # an outdated assumption and caused +40% height regression on the
+        # printmaster article. Removed in v4.0.1.
 
-        # font-family → remove (WeChat forces system fonts on mobile anyway,
-        # and custom families cause preview/actual mismatches)
-        s = re.sub(r'font-family\s*:[^;]+;?\s*', '', s)
+        # font-family — KEEP. WeChat draft edit view inherits from
+        # ProseMirror container (mp-quote, PingFang SC, system-ui...).
+        # Stripping would not change rendering but keeping preserves the
+        # author's intent for the published H5 page.
 
-        # box-shadow / transform / filter (unsupported or unstable in WeChat)
-        s = re.sub(r'box-shadow\s*:[^;]+;?\s*', '', s)
-        s = re.sub(r'transform\s*:[^;]+;?\s*', '', s)
-        s = re.sub(r'filter\s*:[^;]+;?\s*', '', s)
+        # box-shadow — keep (WeChat draft supports it in edit view)
+        # transform — only strip translate* (handled by opacity:0 rewrite
+        # above and by the _strip_wechat_unsupported_css pre-pass); keep
+        # transform:none and decorative transforms that don't hide content
+        s = re.sub(
+            r'transform\s*:\s*translate[XYxy3d]*\([^)]*\)\s*;?\s*',
+            '', s,
+        )
+        # backdrop-filter — strip (WebView doesn't support)
         s = re.sub(r'backdrop-filter\s*:[^;]+;?\s*', '', s)
 
         # sub-pixel borders → 1 px
@@ -561,9 +568,9 @@ def _sanitize_for_wechat(html: str) -> str:
     html = re.sub(r'style="([^"]*)"', _fix_style, html)
     html = re.sub(r'\s+style="\s*"', '', html)
 
-    # ---- remove premailer-added width/height attributes (not needed) ----------
-    html = re.sub(r'\s+width="[^"]*"', '', html)
-    html = re.sub(r'\s+height="[^"]*"', '', html)
+    # ---- width/height attributes — KEEP. Premailer adds width="..." on some
+    # elements; SVGs and images depend on these for correct sizing. Stripping
+    # caused SVG illustrations to lose their aspect ratio in the draft.
 
     # ---- remove empty elements (no text content, no children with text) -------
     html = re.sub(r'<(\w+)(?:\s+[^>]*)?\s*>\s*</\1>', _remove_if_decorative, html)
