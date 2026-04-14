@@ -38,7 +38,10 @@ def load_config() -> dict:
 
 
 def save_config(appid: str, appsecret: str, proxy_url: str = "") -> dict:
-    config = {"appid": appid, "appsecret": appsecret, "proxy_url": proxy_url}
+    config = load_config()
+    config["appid"] = appid
+    config["appsecret"] = appsecret
+    config["proxy_url"] = proxy_url
     path = _config_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(config, ensure_ascii=False), encoding="utf-8")
