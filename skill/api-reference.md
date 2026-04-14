@@ -1,23 +1,51 @@
 # MBEditor API 参考文档
 
-> **环境变量（必读）：** 执行以下任何 curl 命令前，先设置环境变量。
-> - `MBEDITOR_API_BASE` — API 服务地址，默认 `http://localhost:7072`
-> - `MBEDITOR_WEB_BASE` — Web 编辑器地址，默认 `http://localhost:7073`
+## ⚙️ 环境变量配置（Agent 必读 — 每次 API 操作前先确认）
 
-**快速设置：**
+执行以下任何 `curl` 命令前，必须先解析出 MBEditor 的服务地址。
+
+### 环境变量读取优先级（从高到低）
+
+| 优先级 | 读取方式 | 说明 |
+|---|---|---|
+| **1** | `curl` 示例中直接用 `${MBEDITOR_API_BASE}` / `${MBEDITOR_WEB_BASE}` | Agent 可直接在 curl 命令中使用 shell 变量引用 |
+| **2** | `.env` 文件 | 如果项目根目录存在 `.env` 文件，先执行 `source .env` 加载（参考 `.env.example` 模板） |
+| **3** | 系统/Shell 已存在的同名环境变量 | Docker 部署或 CI 环境中通常已设置 |
+| **4** | 默认值 | 如果以上都未设置，使用 `http://localhost:7072`（API）和 `http://localhost:7073`（Web 编辑器） |
+
+### 推荐做法
+
 ```bash
-export MBEDITOR_API_BASE="${MBEDITOR_API_BASE:-http://localhost:7072}"
-export MBEDITOR_WEB_BASE="${MBEDITOR_WEB_BASE:-http://localhost:7073}"
+# 第一步：如果有 .env.example，先检查并创建 .env
+cp .env.example .env && vim .env  # 根据实际部署地址修改
+
+# 第二步：Agent 操作前加载环境变量
+source .env  # 或手动 export
+
+# 第三步：确认地址无误后执行 curl
+curl "${MBEDITOR_API_BASE:-http://localhost:7072}/api/v1/articles"
 ```
 
-**远程部署设置示例：**
+### 核心变量
+
+| 变量 | 默认值 | 用途 |
+|---|---|---|
+| `MBEDITOR_API_BASE` | `http://localhost:7072` | API 服务地址，Agent 调用文章/图片/发布/配置等端点 |
+| `MBEDITOR_WEB_BASE` | `http://localhost:7073` | Web 编辑器地址，Agent 提示用户查看预览效果时使用 |
+
+### 远程部署时的设置
+
 ```bash
-# 部署在云服务器 123.45.67.89 上
+# 本地 Docker 部署 → 使用默认值，无需额外设置
+export MBEDITOR_API_BASE="${MBEDITOR_API_BASE:-http://localhost:7072}"
+export MBEDITOR_WEB_BASE="${MBEDITOR_WEB_BASE:-http://localhost:7073}"
+
+# 远程服务器部署 → 替换为实际地址
 export MBEDITOR_API_BASE="http://123.45.67.89:7072"
 export MBEDITOR_WEB_BASE="http://123.45.67.89:7073"
 ```
 
-以下所有示例中的 `localhost:7072/7073` 均已替换为环境变量引用。
+以下所有 curl 示例中的 `localhost:7072/7073` 均已替换为环境变量 `${MBEDITOR_API_BASE:-...}` 引用。
 
 ---
 

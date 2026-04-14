@@ -14,10 +14,19 @@ metadata:
 **API 服务**: `${MBEDITOR_API_BASE:-http://localhost:7072}/api/v1`
 **Web 编辑器**: `${MBEDITOR_WEB_BASE:-http://localhost:7073}`
 
-> **环境变量：** 默认假设 MBEditor 通过 Docker 部署在本地。如果部署在其他服务器，在执行任何 `curl` 命令前先设置环境变量：
+> **环境变量（Agent 操作 API 前必读）：** 默认假设 MBEditor 通过 Docker 部署在本地。如果部署在其他服务器，需要设置环境变量。
+>
+> **读取优先级（从高到低）：**
+> | 优先级 | 来源 | 说明 |
+> |---|---|---|
+> | 1 | `source .env` | 项目根目录的 `.env` 文件（参照 `.env.example`） |
+> | 2 | Shell 已设置 | Docker/CI 环境中已设置的同名变量 |
+> | 3 | 默认值 | `http://localhost:7072`（API）/ `http://localhost:7073`（Web） |
+>
+> **推荐做法：操作前先在 `.env` 文件中配置：**
 > ```bash
-> export MBEDITOR_API_BASE="http://你的服务器地址:7072"
-> export MBEDITOR_WEB_BASE="http://你的服务器地址:7073"
+> export MBEDITOR_API_BASE="http://服务器地址:7072"
+> export MBEDITOR_WEB_BASE="http://服务器地址:7073"
 > ```
 
 ---

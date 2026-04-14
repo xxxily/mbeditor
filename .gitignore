@@ -25,6 +25,7 @@ frontend/tsconfig.tsbuildinfo
 # Environment
 .env
 .env.*
+!.env.example
 
 # IDE
 .vscode/
@@ -42,6 +43,11 @@ Thumbs.db
 # orchestration framework, research reports).
 CLAUDE.md
 .playwright-mcp/
+
+# Graphify / OMX local artifacts
+.graphify_*
+.omx/
+graphify-out/
 
 # Playwright visual test artifacts and auth state
 backend/tests/visual/.auth/
