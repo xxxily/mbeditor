@@ -65,7 +65,7 @@ export default function Settings() {
                 configured={configured}
                 saving={saving}
                 onAppidChange={setAppid}
-                onAppsecretChange={setAppsecret}
+                onAppsecretChange={handleAppsecretChange}
                 onProxyUrlChange={setProxyUrl}
                 onSave={save}
                 message={msg}
