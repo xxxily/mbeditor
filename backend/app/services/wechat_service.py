@@ -10,12 +10,26 @@ from app.core.exceptions import AppError
 
 _token_cache: dict = {"access_token": "", "expires_at": 0}
 _wx_image_cache: dict[str, str] = {}  # local_path -> wechat_url
-_proxy_client_cache: dict = {}  # proxy_url -> httpx.Client
+_proxy_client_cache: dict[str, httpx.Client] = {}  # proxy_url -> httpx.Client
+
+
+def _validate_proxy_url(url: str) -> bool:
+    """Check if url is a valid proxy URL format."""
+    return bool(re.match(r"^(https?|socks5?)://", url, re.IGNORECASE))
 
 
 def get_http_client() -> httpx.Client:
+    import logging
+
     config = load_config()
-    proxy = config.get("proxy_url") or None
+    proxy_raw = config.get("proxy_url") or None
+
+    # Validate proxy URL before use
+    if proxy_raw and not _validate_proxy_url(proxy_raw):
+        logging.getLogger(__name__).warning(f"Ignoring invalid proxy URL: {proxy_raw}")
+        proxy_raw = None
+
+    proxy = proxy_raw or None
     cache_key = proxy or "__no_proxy__"
 
     if cache_key not in _proxy_client_cache:
@@ -104,7 +118,6 @@ def _post_with_token_retry(
     json_body=None,
     success_key: str,
     err_label: str,
-    timeout: int = 30,
 ) -> dict:
     """POST to a WeChat API that takes access_token in the query string, with
     automatic force-refresh + single retry on token-invalid errors (40001 etc).
