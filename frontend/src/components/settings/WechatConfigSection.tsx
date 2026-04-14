@@ -4,10 +4,12 @@ import Button from "@/components/ui/Button";
 interface WechatConfigSectionProps {
   appid: string;
   appsecret: string;
+  proxyUrl: string;
   configured: boolean;
   saving: boolean;
   onAppidChange: (v: string) => void;
   onAppsecretChange: (v: string) => void;
+  onProxyUrlChange: (v: string) => void;
   onSave: () => void;
   message?: string;
 }
@@ -15,10 +17,12 @@ interface WechatConfigSectionProps {
 export default function WechatConfigSection({
   appid,
   appsecret,
+  proxyUrl,
   configured,
   saving,
   onAppidChange,
   onAppsecretChange,
+  onProxyUrlChange,
   onSave,
   message,
 }: WechatConfigSectionProps) {
@@ -77,6 +81,23 @@ export default function WechatConfigSection({
             placeholder={configured ? "已配置（输入新值覆盖）" : "输入 AppSecret"}
             className="bg-surface-tertiary border border-border-secondary rounded-lg px-3.5 py-2.5 text-[13px] text-fg-primary placeholder:text-fg-muted outline-none focus:border-accent transition-colors"
           />
+        </div>
+
+        {/* Proxy URL field */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[12px] font-semibold text-fg-secondary">
+            API 代理地址
+            <span className="ml-1 text-[11px] font-normal text-fg-muted">(可选)</span>
+          </label>
+          <input
+            value={proxyUrl}
+            onChange={(e) => onProxyUrlChange(e.target.value)}
+            placeholder="https://your-proxy-server:port"
+            className="bg-surface-tertiary border border-border-secondary rounded-lg px-3.5 py-2.5 text-[13px] text-fg-primary placeholder:text-fg-muted outline-none focus:border-accent transition-colors"
+          />
+          <span className="text-[11px] text-fg-muted">
+            所有微信 API 请求将通过此代理发出，用于本地开发时满足 IP 白名单要求
+          </span>
         </div>
 
         {/* Divider */}

@@ -12,6 +12,7 @@ import { useTheme } from "@/hooks/useTheme";
 export default function Settings() {
   const [appid, setAppid] = useState("");
   const [appsecret, setAppsecret] = useState("");
+  const [proxyUrl, setProxyUrl] = useState("");
   const [configured, setConfigured] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
@@ -23,6 +24,7 @@ export default function Settings() {
       if (res.data.code === 0) {
         const d = res.data.data;
         setAppid(d.appid || "");
+        setProxyUrl(d.proxy_url || "");
         setConfigured(d.configured);
       }
     });
@@ -32,7 +34,7 @@ export default function Settings() {
     setSaving(true);
     setMsg("");
     try {
-      await api.put("/config", { appid, appsecret });
+      await api.put("/config", { appid, appsecret, proxy_url: proxyUrl });
       setMsg("保存成功");
       setConfigured(true);
     } catch {
@@ -59,10 +61,12 @@ export default function Settings() {
               <WechatConfigSection
                 appid={appid}
                 appsecret={appsecret}
+                proxyUrl={proxyUrl}
                 configured={configured}
                 saving={saving}
                 onAppidChange={setAppid}
                 onAppsecretChange={setAppsecret}
+                onProxyUrlChange={setProxyUrl}
                 onSave={save}
                 message={msg}
               />
