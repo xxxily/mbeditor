@@ -78,7 +78,7 @@ export default function WechatConfigSection({
             value={appsecret}
             onChange={(e) => onAppsecretChange(e.target.value)}
             type="password"
-            placeholder={configured ? "已配置（输入新值覆盖）" : "输入 AppSecret"}
+            placeholder={configured && !appsecret ? "已配置（输入新值覆盖）" : "输入 AppSecret"}
             className="bg-surface-tertiary border border-border-secondary rounded-lg px-3.5 py-2.5 text-[13px] text-fg-primary placeholder:text-fg-muted outline-none focus:border-accent transition-colors"
           />
         </div>

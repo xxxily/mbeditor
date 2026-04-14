@@ -54,7 +54,9 @@ def load_config() -> dict:
 def save_config(appid: str, appsecret: str, proxy_url: str = "") -> dict:
     config = load_config()
     config["appid"] = appid
-    config["appsecret"] = appsecret
+    # Only overwrite appsecret if a new non-empty value is provided
+    if appsecret:
+        config["appsecret"] = appsecret
     config["proxy_url"] = proxy_url
     path = _config_path()
     path.parent.mkdir(parents=True, exist_ok=True)

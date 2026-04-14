@@ -9,7 +9,7 @@ router = APIRouter(prefix="/config", tags=["config"])
 
 class ConfigReq(BaseModel):
     appid: str
-    appsecret: str
+    appsecret: str = ""
     proxy_url: str = ""
 
 
