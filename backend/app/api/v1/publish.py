@@ -743,9 +743,9 @@ def _publish_draft_sync(req_article_id: str, req_author: str, req_digest: str) -
         if match:
             src = match.group(1)
             try:
-                from app.services.wechat_service import get_http_client
+                from app.services.wechat_service import get_direct_client
 
-                client = get_http_client()
+                client = get_direct_client()
                 resp_bytes = client.get(src, timeout=15).content
                 thumb_media_id = wechat_service.upload_thumb_to_wechat(
                     resp_bytes, "cover.jpg"
