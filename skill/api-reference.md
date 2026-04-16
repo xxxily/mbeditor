@@ -1,0 +1,1 @@
+../.claude/skills/mbeditor/api-reference.md
