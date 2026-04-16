@@ -11,25 +11,11 @@ from app.core.exceptions import AppError
 _token_cache: dict = {"access_token": "", "expires_at": 0}
 _wx_image_cache: dict[str, str] = {}  # local_path -> wechat_url
 _proxy_client_cache: dict[str, httpx.Client] = {}  # proxy_url -> httpx.Client
-_direct_client: httpx.Client | None = None
 
 
 def _validate_proxy_url(url: str) -> bool:
+    """Check if url is a valid proxy URL format."""
     return bool(re.match(r"^(https?|socks5?)://", url, re.IGNORECASE))
-
-
-def get_direct_client() -> httpx.Client:
-    """Return a direct (non-proxied) HTTP client for fetching remote resources.
-
-    Separate from get_http_client() so that remote image fetching (which can
-    fetch arbitrary third-party URLs) is NOT routed through the WeChat API
-    proxy — only WeChat API calls that actually need IP whitelist
-    compliance go through the proxy.
-    """
-    global _direct_client
-    if _direct_client is None:
-        _direct_client = httpx.Client(timeout=30)
-    return _direct_client
 
 
 def get_http_client() -> httpx.Client:
@@ -68,9 +54,7 @@ def load_config() -> dict:
 def save_config(appid: str, appsecret: str, proxy_url: str = "") -> dict:
     config = load_config()
     config["appid"] = appid
-    # Only overwrite appsecret if a new non-empty value is provided
-    if appsecret:
-        config["appsecret"] = appsecret
+    config["appsecret"] = appsecret
     config["proxy_url"] = proxy_url
     path = _config_path()
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -218,7 +202,7 @@ def process_html_images(html: str, images_dir: str) -> str:
             local_path = Path(images_dir) / src.removeprefix("/images/")
         elif src.startswith("http"):
             try:
-                client = get_direct_client()
+                client = get_http_client()
                 resp = client.get(
                     src,
                     headers={

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import SettingsHeader from "@/components/layout/SettingsHeader";
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
@@ -18,7 +18,6 @@ export default function Settings() {
   const [msg, setMsg] = useState("");
   const [activeSection, setActiveSection] = useState("wechat");
   const { theme, setTheme } = useTheme();
-  const appsecretTouched = useRef(false);
 
   useEffect(() => {
     api.get("/config").then((res) => {
@@ -27,31 +26,17 @@ export default function Settings() {
         setAppid(d.appid || "");
         setProxyUrl(d.proxy_url || "");
         setConfigured(d.configured);
-        // Reset touched flag on initial load
-        appsecretTouched.current = false;
       }
     });
   }, []);
-
-  const handleAppsecretChange = (v: string) => {
-    setAppsecret(v);
-    appsecretTouched.current = true;
-  };
 
   const save = async () => {
     setSaving(true);
     setMsg("");
     try {
-      // Only send appsecret if user actually typed a new value
-      const payload: Record<string, string> = { appid, proxy_url: proxyUrl };
-      if (appsecretTouched.current && appsecret) {
-        payload.appsecret = appsecret;
-      }
-      await api.put("/config", payload);
+      await api.put("/config", { appid, appsecret, proxy_url: proxyUrl });
       setMsg("保存成功");
       setConfigured(true);
-      // Reset the touched flag after successful save
-      appsecretTouched.current = false;
     } catch {
       setMsg("保存失败");
     }
@@ -80,7 +65,7 @@ export default function Settings() {
                 configured={configured}
                 saving={saving}
                 onAppidChange={setAppid}
-                onAppsecretChange={handleAppsecretChange}
+                onAppsecretChange={setAppsecret}
                 onProxyUrlChange={setProxyUrl}
                 onSave={save}
                 message={msg}

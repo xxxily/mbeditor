@@ -1,0 +1,9 @@
+{
+  "skills": [
+    {
+      "name": "mbeditor",
+      "description": "AI Agent skill for MBEditor — the first AI-native WeChat official account editor. Enables agents to design, create, and publish WeChat articles with pixel-perfect rendering.",
+      "path": ".claude/skills/mbeditor"
+    }
+  ]
+}
