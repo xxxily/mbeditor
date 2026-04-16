@@ -1,0 +1,11 @@
+{
+  "skills": [
+    {
+      "name": "mbeditor",
+      "remote": "AAAAAnson/mbeditor",
+      "source": "local",
+      "path": "skills/mbeditor",
+      "version": "main"
+    }
+  ]
+}
