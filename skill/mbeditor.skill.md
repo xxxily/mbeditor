@@ -1,1 +1,1 @@
-../.claude/skills/mbeditor/SKILL.md
+../skills/mbeditor/SKILL.md

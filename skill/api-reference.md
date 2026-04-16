@@ -1,1 +1,1 @@
-../.claude/skills/mbeditor/api-reference.md
+../skills/mbeditor/api-reference.md
