@@ -105,7 +105,7 @@ async def render_projected_article_as_mbdoc(
         upload_images=upload_images,
         image_uploader=_image_uploader_for(upload_images),
     )
-    html = render_for_wechat(doc, ctx)
+    html = await render_for_wechat(doc, ctx)
     return success({"html": html, "uploaded_images": upload_images, "projected": True})
 
 
@@ -122,7 +122,7 @@ async def render_projected_article_payload_as_mbdoc(
         upload_images=upload_images,
         image_uploader=_image_uploader_for(upload_images),
     )
-    html = render_for_wechat(doc, ctx)
+    html = await render_for_wechat(doc, ctx)
     return success({"html": html, "uploaded_images": upload_images, "projected": True})
 
 
@@ -136,7 +136,7 @@ async def publish_projected_article_payload_as_mbdoc(
         upload_images=True,
         image_uploader=_image_uploader_for(True),
     )
-    html = render_for_wechat(doc, ctx)
+    html = await render_for_wechat(doc, ctx)
     thumb_media_id = resolve_cover_media_id(article, html)
     source_url = extract_source_url(article.get("html", ""))
     result = create_article_draft(
@@ -202,5 +202,5 @@ async def render_mbdoc(
         upload_images=upload_images,
         image_uploader=_image_uploader_for(upload_images),
     )
-    html = render_for_wechat(doc, ctx)
+    html = await render_for_wechat(doc, ctx)
     return success({"html": html, "uploaded_images": upload_images})

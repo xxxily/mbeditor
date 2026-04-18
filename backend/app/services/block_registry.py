@@ -6,6 +6,7 @@ render_block) and the RenderContext dataclass. The default factory
 """
 from dataclasses import dataclass, field
 from typing import Callable, Dict, Optional
+import inspect
 
 from app.models.mbdoc import Block, BlockType
 from app.services.renderers.base import BlockRenderer
@@ -67,9 +68,12 @@ class BlockRegistry:
             raise UnknownBlockTypeError(block_type)
         return r
 
-    def render_block(self, block: Block, ctx: RenderContext) -> str:
+    async def render_block(self, block: Block, ctx: RenderContext) -> str:
         renderer = self.find(block.type)
-        return renderer.render(block, ctx)
+        result = renderer.render(block, ctx)
+        if inspect.isawaitable(result):
+            return await result
+        return result
 
     @classmethod
     def default(cls) -> "BlockRegistry":

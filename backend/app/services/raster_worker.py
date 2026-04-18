@@ -9,6 +9,7 @@ worker itself only produces bytes.
 """
 from __future__ import annotations
 
+import asyncio
 import base64
 import hashlib
 import re
@@ -100,7 +101,7 @@ def _build_document(block: RasterBlock) -> str:
 </html>"""
 
 
-def _screenshot_via_playwright(block: RasterBlock, full_html: str) -> bytes:
+def _screenshot_sync_impl(block: RasterBlock, full_html: str) -> bytes:
     try:
         from playwright.sync_api import sync_playwright
     except ImportError as exc:
@@ -131,13 +132,17 @@ def _screenshot_via_playwright(block: RasterBlock, full_html: str) -> bytes:
         raise RasterRenderError(f"Headless Chromium failed: {exc}") from exc
 
 
-def render_raster_png(block: RasterBlock) -> bytes:
+async def _screenshot_via_playwright(block: RasterBlock, full_html: str) -> bytes:
+    return await asyncio.to_thread(_screenshot_sync_impl, block, full_html)
+
+
+async def render_raster_png(block: RasterBlock) -> bytes:
     cache_key = raster_cache_key(block)
     cached = _RASTER_CACHE.get(cache_key)
     if cached is not None:
         return cached
 
-    screenshot = _screenshot_via_playwright(block, _build_document(block))
+    screenshot = await _screenshot_via_playwright(block, _build_document(block))
     _RASTER_CACHE[cache_key] = screenshot
     return screenshot
 

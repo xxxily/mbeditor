@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 class RasterRenderer(BlockRenderer):
     block_type = BlockType.RASTER
 
-    def render(self, block: Block, ctx: "RenderContext") -> str:
+    async def render(self, block: Block, ctx: "RenderContext") -> str:
         assert isinstance(block, RasterBlock)
 
         if ctx.upload_images and ctx.image_uploader is None:
@@ -28,7 +28,7 @@ class RasterRenderer(BlockRenderer):
                 "WeChat drafts cannot carry inline data: URLs."
             )
 
-        png_bytes = render_raster_png(block)
+        png_bytes = await render_raster_png(block)
         if ctx.upload_images and ctx.image_uploader is not None:
             filename = f"raster-{raster_cache_key(block)[:12]}.png"
             src = ctx.image_uploader(png_bytes, filename)
