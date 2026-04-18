@@ -140,6 +140,54 @@ curl -X POST "${MBEDITOR_API_BASE:-http://localhost:7072}/api/v1/mbdoc/doc-20260
 curl -X DELETE "${MBEDITOR_API_BASE:-http://localhost:7072}/api/v1/mbdoc/doc-20260411-001"
 ```
 
+### Article → MBDoc 投影端点（Legacy 文章无缝迁移到 MBDoc 渲染管线）
+
+当文章仍存储在 legacy `/articles` 体系中时，可通过投影端点将其**临时转换**为 MBDoc 格式并走统一渲染管线，无需手动迁移数据。
+
+#### 8. 投影 Legacy 文章为 MBDoc
+```bash
+curl -X POST "${MBEDITOR_API_BASE:-http://localhost:7072}/api/v1/mbdoc/project/article/{article_id}?persist=false"
+```
+- `persist=false`（默认）：仅返回投影后的 MBDoc，不保存到 mbdoc 存储
+- `persist=true`：投影并保存到 mbdoc 存储（等同于数据迁移）
+
+#### 9. 投影并渲染 Legacy 文章
+```bash
+curl -X POST "${MBEDITOR_API_BASE:-http://localhost:7072}/api/v1/mbdoc/project/article/{article_id}/render?upload_images=false"
+```
+将 legacy 文章投影为 MBDoc 后立即走 `render_for_wechat` 渲染管线，产出微信兼容 HTML。
+
+#### 10. 投影并渲染任意文章 payload
+```bash
+curl -X POST "${MBEDITOR_API_BASE:-http://localhost:7072}/api/v1/mbdoc/project/render?upload_images=false" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "temp-001",
+    "title": "临时文章",
+    "mode": "html",
+    "html": "<h1>标题</h1><p>正文</p>",
+    "css": ""
+  }'
+```
+不依赖已保存的文章，直接传入文章 payload 投影渲染。适合 Agent 在内存中组装文章后一步获取微信兼容 HTML。
+
+#### 11. 投影并发布到微信草稿箱（一键全流程）
+```bash
+curl -X POST "${MBEDITOR_API_BASE:-http://localhost:7072}/api/v1/mbdoc/project/publish" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "pub-001",
+    "title": "要发布的文章",
+    "mode": "html",
+    "html": "<section style=\"padding:20px;\"><h1 style=\"font-size:26px;\">标题</h1><p style=\"font-size:16px;line-height:1.8;\">正文...</p></section>",
+    "css": "",
+    "author": "作者名",
+    "digest": "文章摘要",
+    "cover": "/images/cover.jpg"
+  }'
+```
+全自动流水线：投影 → 渲染（upload_images=true）→ 解析封面 → 提取阅读原文 URL → 推送微信草稿箱。**这是 Agent 最推荐的一步到位发布方式。**
+
 ### MBDoc WYSIWYG 不变量
 
 `render_for_wechat` 是 MBEditor 预览/复制/推送草稿箱三条路径**唯一的真相来源**。调用两次同一个 MBDoc（一次 `upload_images=false`，一次 `upload_images=true`），产出的 HTML diff **必须只在 `<img src>` 属性上**。对纯文本文档（无 image block），两次调用产出完全一致。
@@ -172,7 +220,7 @@ curl -sX POST "${MBEDITOR_API_BASE:-http://localhost:7072}/api/v1/mbdoc/demo-001
 - `markdown` / `html` / `image` / `svg` / `raster` 5 种 block 都是 stub（渲染为黄色警告框）
 - `render?upload_images=true` 还没有真正的图片上传逻辑（Stage 3 实装）
 - 前端 Editor 页面仍在 legacy `/articles` 界面；MBDoc 目前**只能通过 API 操作**
-- `/articles` 和 `/mbdoc` 是两套独立存储，无数据迁移工具
+- `/articles` 和 `/mbdoc` 是两套独立存储，可通过 `/mbdoc/project/article/{id}?persist=true` 将 legacy 文章投影到 mbdoc 存储
 - MBDocStorage 无并发锁（单用户单机假设），两个并发 PUT 有竞争
 
 ---
@@ -277,7 +325,16 @@ curl -X POST "${MBEDITOR_API_BASE:-http://localhost:7072}/api/v1/publish/process
 - 将文章中所有本地图片上传到微信 CDN 并替换 URL
 - 需要先配置微信 AppID/AppSecret
 
-### 3. 推送到微信草稿箱
+### 3. 处理 HTML 供一键复制（含图片上传）
+```bash
+curl -X POST "${MBEDITOR_API_BASE:-http://localhost:7072}/api/v1/publish/process-for-copy" \
+  -H "Content-Type: application/json" \
+  -d '{"html":"<h1>标题</h1><p>正文</p>","css":"h1{color:#333}"}'
+```
+- 与 `/publish/preview` 类似，但会在微信已配置时将本地图片上传到微信 CDN
+- 适合 Web 编辑器的"复制到剪贴板"功能，用户粘贴到微信后台可直接使用
+
+### 4. 推送到微信草稿箱
 ```bash
 curl -X POST "${MBEDITOR_API_BASE:-http://localhost:7072}/api/v1/publish/draft" \
   -H "Content-Type: application/json" \
@@ -300,8 +357,35 @@ curl "${MBEDITOR_API_BASE:-http://localhost:7072}/api/v1/config"
 ```bash
 curl -X PUT "${MBEDITOR_API_BASE:-http://localhost:7072}/api/v1/config" \
   -H "Content-Type: application/json" \
-  -d '{"appid":"wx...","appsecret":"..."}'
+  -d '{"appid":"wx...","appsecret":"...","proxy_url":""}'
 ```
+- `proxy_url`（可选）：微信 API 代理地址，适用于服务器无法直连微信 API 的场景
+
+### 3. 测试微信凭证连通性
+```bash
+curl -X POST "${MBEDITOR_API_BASE:-http://localhost:7072}/api/v1/config/test" \
+  -H "Content-Type: application/json" \
+  -d '{"appid":"wx...","appsecret":"...","proxy_url":""}'
+```
+- 保存配置并实际调用微信 API 验证凭证是否有效
+- 返回 `{"valid": true}` 表示配置成功可用
+
+---
+
+## 五点五、版本 API
+
+### 1. 获取当前版本
+```bash
+curl "${MBEDITOR_API_BASE:-http://localhost:7072}/api/v1/version"
+```
+返回：`{"data":{"version":"3.0.0","repo":"AAAAnson/mbeditor"}}`
+
+### 2. 检查更新
+```bash
+curl "${MBEDITOR_API_BASE:-http://localhost:7072}/api/v1/version/check"
+```
+返回：`{"data":{"current":"3.0.0","latest":"3.1.0","has_update":true}}`
+- 通过 GitHub Releases API 检查最新版本，结果缓存 1 小时
 
 ---
 

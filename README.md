@@ -182,8 +182,8 @@ claude "帮我写一篇公众号文章，排版清晰，并投递到草稿箱"
 
 ```bash
 # macOS / Linux
-mkdir -p ~/.claude/skills/mbeditor
-cp -r skills/mbeditor/* ~/.claude/skills/mbeditor/
+mkdir -p ~/.claude/skills
+cp skill/mbeditor.skill.md ~/.claude/skills/mbeditor.skill.md
 
 # Windows
 mkdir %USERPROFILE%\.claude\skills
@@ -193,8 +193,9 @@ copy skill\mbeditor.skill.md %USERPROFILE%\.claude\skills\mbeditor.skill.md
 #### Codex
 
 ```bash
-mkdir -p ~/.codex/agents/mbeditor
-cp -r skills/mbeditor/* ~/.codex/agents/mbeditor/
+# macOS / Linux
+mkdir -p ~/.codex/agents
+cp skill/mbeditor.skill.md ~/.codex/agents/mbeditor.skill.md
 
 # 使用
 codex "调用 MBEditor 写一篇公众号文章，并完成排版"
