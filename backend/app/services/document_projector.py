@@ -48,7 +48,7 @@ def _project_simple_image_html(html: str) -> ImageBlock | None:
 
 
 _RASTER_TRIGGER_RE = re.compile(
-    r"position\s*:\s*absolute|transform\s*:\s*(?!none)|animation\s*:|filter\s*:|backdrop-filter\s*:|perspective\s*:",
+    r"position\s*:\s*absolute|(?<![\w-])transform\s*:\s*(?!none)|(?<![\w-])filter\s*:|(?<![\w-])animation\s*:[^;]|(?<![\w-])perspective\s*:",
     re.IGNORECASE,
 )
 
