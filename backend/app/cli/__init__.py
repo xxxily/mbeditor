@@ -1,0 +1,1 @@
+"""MBEditor native CLI package."""

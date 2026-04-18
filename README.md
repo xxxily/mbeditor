@@ -2,60 +2,148 @@
 
 # MBEditor
 
-### 首款 AI Agent 原生的微信公众号编辑器
+### 让 Agent 直接写出、排版并投递微信公众号文章
 
-**告诉你的 Agent 一句话，从排版到发布全自动完成。**
+**不是只会生成文案，而是把公众号内容生产流程真正跑通。**
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Docker](https://img.shields.io/badge/Docker-一键部署-2496ED.svg)](docker-compose.yml)
-[![AI Agent](https://img.shields.io/badge/Agent-Claude_|_Codex_|_OpenClaw-8B5CF6.svg)](skill/mbeditor.skill.md)
-[![Version](https://img.shields.io/badge/Version-3.0-E8553A.svg)](https://github.com/AAAAAnson/mbeditor/releases/tag/v3.0)
+[![Docker](https://img.shields.io/badge/Docker-One%20Command-2496ED.svg)](docker-compose.yml)
+[![Agent](https://img.shields.io/badge/Agent-Claude%20%7C%20Codex%20%7C%20OpenClaw-8B5CF6.svg)](skill/mbeditor.skill.md)
+[![Version](https://img.shields.io/badge/Version-v3.0-E8553A.svg)](https://github.com/AAAAAnson/mbeditor/releases)
 
 </div>
 
 ---
 
-![MBEditor 编辑器](docs/screenshots/editor-v3.png)
+> MBEditor 不是“给 AI 加个写稿按钮”的编辑器。  
+> 它是一套面向 Agent 工作流设计的微信公众号内容生产系统。
 
-## 为什么做了这个
+![MBEditor 编辑器界面](docs/screenshots/editor-v3.png)
 
-市面上的公众号编辑器都是给人用的。
+## 先用一句话理解它
 
-但当 AI Agent 成为内容生产的主力，编辑器需要的不是更好看的 UI，而是 **能被程序调用的接口**。MBEditor 的每个功能都是一个 API 端点——创建文章、上传图片、切换排版、推送草稿箱——全部 `curl` 一行搞定。
+如果你希望 Agent 不只是帮你写一段文案，而是继续完成排版、处理图片、预览效果、投递微信草稿箱，那么 MBEditor 就是这层基础设施。
 
-你可以用 Claude Code 说一句「写一篇 Docker 入门推文，杂志风排版，发到草稿箱」，剩下的事情 Agent 自己完成。
+## MBEditor 是什么
 
-## 三个核心差异
+MBEditor 是一个面向微信公众号内容生产的编辑与发布系统。
 
-<table>
-<tr>
-<td width="33%">
+它最核心的差异，不是单纯支持富文本编辑，也不是只会生成文案，而是把公众号内容生产流程拆成了一套 **可以被 Agent 直接调用的能力层**。
 
-**Agent 原生**
+这意味着 Claude Code、Codex、OpenClaw 这类 Agent 不只是“帮你写一篇文章”，而是可以继续往下完成：
 
-不是"兼容 AI"，是"为 AI 设计"。完整 RESTful API，Skill 文件即装即用。Claude Code / Codex / OpenClaw 任意一个 Agent 都能直接操控编辑器。
+- 创建文章
+- 写入正文
+- 选择或调整排版
+- 上传图片
+- 处理微信兼容样式
+- 预览最终效果
+- 投递到微信公众号草稿箱
 
-</td>
-<td width="33%">
+如果你想做的是 **Agent 驱动的公众号工作流**，而不是一个更花哨的手工编辑器，MBEditor 才真正有价值。
 
-**CLI 全流程**
+## 它解决的不是“写作”，而是整条生产链路
 
-从创建到发布，不需要打开浏览器。所有操作都可以用命令行完成。适合 CI/CD 流水线、定时任务、批量生产。
+大多数公众号编辑工具主要服务人工操作。
+大多数 AI 写作工具主要停留在生成文案。
 
-</td>
-<td width="34%">
+但真实的问题其实在中间断掉了：
 
-**高度自定义排版**
+- Agent 很难稳定操作复杂网页 UI
+- 生成内容之后，排版、图片、样式兼容、发布仍然是断开的
+- 很多“AI 公众号工具”只能给你一段文字，不能给你最终成品
 
-三种编辑模式 + 丰富 HTML 排版组件 + 无限自定义。HTML/CSS/JS 三栏编辑给你完全的排版控制权，Markdown 模式让你专注写作。
+MBEditor 解决的是这条链路的可执行性：
 
-</td>
-</tr>
-</table>
+| 环节 | 普通方案常见问题 | MBEditor 的做法 |
+|------|------------------|----------------|
+| 写作 | 只产出正文，缺少后续动作 | 文章创建与内容写入 API 化 |
+| 排版 | AI 生成内容难以稳定落版 | 支持 HTML / Markdown / 可视化编辑 |
+| 图片 | 上传与引用流程断裂 | 图片接口独立可调用 |
+| 发布 | 最后一步仍需人工进入后台 | 支持投递到微信草稿箱 |
+| Agent 接入 | 大量依赖点击 UI | 提供 REST API + Skill |
+
+一句话说，MBEditor 不是只解决“写”，而是要让 Agent **真的把一篇公众号文章做完**。
+
+## 为什么 MBEditor 值得关注
+
+### 1. Agent First
+MBEditor 从设计上就不是“人点一下，AI 帮一点”。
+它的核心能力是可调用、可编排、可嵌入流程的，这才是 Agent 时代真正有价值的方向。
+
+### 2. 不是半成品能力
+很多工具只能解决其中一段，比如只会写文案、只会做 Markdown、只会提供一个编辑器。
+MBEditor 的方向是把写作、排版、预览、发布串起来，减少链路断点。
+
+### 3. 同时保留人工可控性
+它不是纯自动化黑箱。
+你既可以让 Agent 全自动执行，也可以自己进入编辑器手工微调，最后再投递。
+
+## 核心能力
+
+- **Agent 可调用**：适配 Claude Code、Codex、OpenClaw 等 Agent 工作流
+- **完整 REST API**：文章、图片、发布、配置都有明确接口
+- **多种编辑模式**：HTML、Markdown、可视化编辑并存
+- **适配微信生态**：处理样式兼容、图片上传、草稿投递
+- **高自由度排版**：支持直接控制 HTML / CSS / JS
+- **可接入自动化系统**：适合进入脚本、定时任务、CI 或内部内容流程
+
+## 适合谁
+
+MBEditor 更适合这些场景：
+
+### 内容团队
+需要批量、标准化地产出公众号内容，希望把选题到草稿的流程做成半自动或全自动。
+
+### 开发者 / AI 工具构建者
+希望把公众号内容生产接入 Agent 或内容系统，而不是停留在“生成一段文案”。
+
+### 对排版成品要求高的人
+不仅要能写，还要能做出真正能发的公众号排版，而不是普通文本输出。
+
+### 需要可控流程的人
+希望既能自动执行，也能在最后人工检查、修稿、微调。
+
+如果你只是偶尔手工写一篇文章，对 API、Agent 和自动化没有需求，那 MBEditor 的优势不会完全体现出来。
+
+## 三个典型使用场景
+
+### 场景 1：技术公众号
+你给 Agent 一个主题，比如 Docker、RAG、AI Coding、产品复盘，它自动完成：
+
+- 起标题
+- 写正文
+- 套用技术风格排版
+- 插入封面或配图
+- 投递到微信草稿箱
+
+适合个人开发者、技术团队、独立创作者。
+
+### 场景 2：品牌内容批量生产
+团队每周要产出多篇内容，希望先用统一模板生成初稿，再由运营二次修改后发出。
+
+适合有固定栏目、固定节奏、固定视觉规范的内容团队。
+
+### 场景 3：内容工作流接入自动化系统
+把 MBEditor 接入内部系统，让选题库、素材库、Agent、排版引擎、发布流程串起来，而不是每一步都手工切换工具。
+
+适合希望把内容生产系统化的团队，而不是只追求单次提效。
+
+## 你实际会怎么用它
+
+你可以直接对 Agent 下这样的命令：
+
+```bash
+claude "写一篇关于 Docker 入门的公众号文章，面向新手，风格清晰克制，做好排版，并投递到微信草稿箱"
+```
+
+MBEditor 负责底层能力，Agent 负责把这些能力串成流程。
+
+最终拿到的不是一段“待处理文本”，而是一篇更接近可直接发送的公众号成品。
 
 ## 快速开始
 
-### 第一步：部署 MBEditor
+### 1. 部署 MBEditor
 
 ```bash
 git clone https://github.com/AAAAAnson/mbeditor.git
@@ -63,39 +151,34 @@ cd mbeditor
 docker compose up -d
 ```
 
-部署完成后：
-- **编辑器界面**：http://localhost:7073
-- **API 接口**：http://localhost:7072/api/v1
+启动完成后：
 
-**已部署过的用户升级到最新版：**
+- 编辑器界面: `http://localhost:7073`
+- API 接口: `http://localhost:7072/api/v1`
+
+更新版本：
 
 ```bash
-cd mbeditor
 git pull
 docker compose up --build -d
 ```
 
-> 升级不会丢失数据，文章和图片存储在 `data/` 目录中，不受容器重建影响。
+> 文章和图片默认保存在 `data/` 目录，更新不会直接清空内容。
 
-### 第二步：安装 AI Agent Skill
+### 2. 安装 Agent Skill
 
-MBEditor 提供了 `skill/mbeditor.skill.md`，安装后 Agent 就能直接操控编辑器。根据你使用的 Agent 选择对应方式：
+MBEditor 提供了 `skill/mbeditor.skill.md`，可以直接接入 Agent。
 
-<details open>
-<summary><strong>Claude Code</strong></summary>
+#### Claude Code
 
-**方式一：项目级安装（推荐）**
-
-在 MBEditor 项目目录下直接使用，Agent 会自动发现 `skill/mbeditor.skill.md`：
+项目内直接使用：
 
 ```bash
 cd mbeditor
-claude "帮我写一篇关于 Docker 的推文，推到草稿箱"
+claude "帮我写一篇公众号文章，排版清晰，并投递到草稿箱"
 ```
 
-**方式二：全局安装（任意目录可用）**
-
-将 Skill 文件复制到 Claude Code 的全局 skills 目录：
+全局安装：
 
 ```bash
 # macOS / Linux
@@ -104,21 +187,10 @@ cp skill/mbeditor.skill.md ~/.claude/skills/mbeditor.skill.md
 
 # Windows
 mkdir %USERPROFILE%\.claude\skills
-copy skill\SKILL.md %USERPROFILE%\.claude\skills\mbeditor.skill.md
+copy skill\mbeditor.skill.md %USERPROFILE%\.claude\skills\mbeditor.skill.md
 ```
 
-安装后在任意目录都可以使用：
-
-```bash
-claude "写一篇 AI 入门的公众号文章，杂志风排版，发到草稿箱"
-```
-
-</details>
-
-<details>
-<summary><strong>Codex</strong></summary>
-
-将 Skill 文件放到 Codex 的 agents 目录：
+#### Codex
 
 ```bash
 # macOS / Linux
@@ -126,118 +198,86 @@ mkdir -p ~/.codex/agents
 cp skill/mbeditor.skill.md ~/.codex/agents/mbeditor.skill.md
 
 # 使用
-codex "部署微信编辑器，然后写一篇推文发到草稿箱"
+codex "调用 MBEditor 写一篇公众号文章，并完成排版"
 ```
 
-</details>
-
-<details>
-<summary><strong>OpenClaw</strong></summary>
-
-使用 OpenClaw 的 skill 命令直接注册：
+#### OpenClaw
 
 ```bash
 openclaw skill add ./skill/mbeditor.skill.md
-
-# 使用
-openclaw "写一篇公众号推文，主题是 Docker 入门"
+openclaw "写一篇公众号文章，主题是 Docker 入门，并完成排版和草稿投递"
 ```
 
-</details>
+### 3. 配置微信公众号（可选）
 
-> **注意**：Skill 中默认端口为 Docker 部署的 `7072`（API）和 `7073`（编辑器）。如果你用本地开发模式运行，需要将端口改为对应的本地端口，或在 `docker-compose.yml` 中修改端口映射。
-
-### 第三步：配置微信公众号（可选）
-
-如果需要一键推送到公众号草稿箱，在编辑器的「设置」页面填入微信公众号的 AppID 和 AppSecret，或通过 API 配置：
+如果要直接投递到微信草稿箱，需要配置公众号 AppID 和 AppSecret：
 
 ```bash
 curl -X PUT http://localhost:7072/api/v1/config \
   -H "Content-Type: application/json" \
-  -d '{"appid":"wx你的appid","appsecret":"你的appsecret"}'
+  -d '{"appid":"你的appid","appsecret":"你的appsecret"}'
 ```
 
-## Agent 工作流
+## Agent Demo
 
-MBEditor 的设计哲学是 **Agent First**。Agent 通过 REST API 完成全部操作：
+下面是一个最小可执行流程。
+这部分不是概念展示，而是 MBEditor 真正有价值的地方：它让 Agent 能稳定调用公众号生产链路里的关键动作。
 
 ```bash
 # 1. 创建文章
 curl -X POST http://localhost:7072/api/v1/articles \
   -H "Content-Type: application/json" \
-  -d '{"title":"AI 入门指南","mode":"html"}'
-# → {"data": {"id": "a1b2c3"}}
+  -d '{"title":"AI 写作指南","mode":"html"}'
 
 # 2. 写入内容
-curl -X PUT http://localhost:7072/api/v1/articles/a1b2c3 \
-  -d '{"html":"<h1>AI 入门</h1><p>正文...</p>", "css":"h1{color:#333}"}'
+curl -X PUT http://localhost:7072/api/v1/articles/{id} \
+  -d '{"html":"<h1>AI 写作指南</h1><p>正文...</p>","css":"h1{color:#333}"}'
 
 # 3. 上传图片
 curl -X POST http://localhost:7072/api/v1/images/upload \
   -F "file=@cover.png"
 
-# 4. 一键推送到微信草稿箱
+# 4. 投递草稿
 curl -X POST http://localhost:7072/api/v1/publish/draft \
-  -d '{"article_id":"a1b2c3"}'
+  -d '{"article_id":"你的文章ID"}'
 ```
 
-或者一句话搞定：
+这意味着 MBEditor 可以被接进：
 
-```bash
-claude "写一篇关于 MBEditor 的推文，杂志风排版，推到草稿箱"
-```
+- Agent 自动写作流程
+- 定时内容生产任务
+- 内部运营工具链
+- CI / 自动化发布系统
 
-## 推荐搭配 Skill
-
-MBEditor 负责编辑和发布，排版设计和内容风格可以搭配以下 Skill 使用（仅供参考）：
-
-| Skill | 用途 | 链接 |
-|-------|------|------|
-| **Anthropic Frontend Design** | 排版设计风格 — 生成高质量、有设计感的 HTML 排版，告别 AI 味 | [anthropics/skills/frontend-design](https://github.com/anthropics/skills/tree/main/skills/frontend-design) |
-| **Khazix Skills** | 内容写作风格 — 公众号长文写作，个人风格化的内容输出 | [KKKKhazix/khazix-skills](https://github.com/KKKKhazix/khazix-skills) |
-
-```bash
-# 安装示例（Claude Code）
-claude install-skill https://github.com/anthropics/skills/tree/main/skills/frontend-design
-claude install-skill https://github.com/KKKKhazix/khazix-skills
-```
-
-> 搭配使用：让 Khazix Skill 负责内容创作，Frontend Design Skill 负责排版风格，MBEditor 负责预览和发布到公众号。三者配合实现从写作到发布的全链路自动化。
-
-## 编辑器功能
+## 编辑与排版能力
 
 ![预览模式](docs/screenshots/preview-v3.png)
 
-### 三种编辑模式
+如果你只想生成文字，很多工具都能做。
+但如果你想要的是“可发布成品”，编辑与排版层就是不能省的部分。
 
-| 模式 | 适合谁 | 能做什么 |
-|------|--------|---------|
-| **HTML 模式** | 设计师 / Agent | HTML + CSS + JS 三栏编辑，像素级控制每一个元素 |
-| **Markdown 模式** | 写作者 | 用最简洁的语法写作，多种排版主题自动渲染 |
-| **可视化编辑** | 所有人 | 所见即所得，在预览区直接编辑内容 |
+### 编辑模式
 
-### HTML 排版组件
+- **HTML 模式**：适合设计师、开发者、Agent，精细控制版式
+- **Markdown 模式**：适合快速写作和结构化内容
+- **可视化编辑**：适合人工微调和最终检查
 
-内置丰富的纯 inline style 排版组件，复制到公众号后完美还原：
+### 可做出的版式类型
 
-- **标签徽章** — 彩色圆角标签，适合分类标记
-- **渐变卡片** — 深色渐变背景 + 亮色文字，适合重点强调
-- **数据看板** — 多列数字统计展示
-- **时间线** — 带节点的步骤流程图
-- **引用样式** — 侧边线引用 + 装饰引号
-- **对比表格** — 功能对比矩阵，适合产品介绍
+MBEditor 支持高自由度的 HTML 版式表达，适合公众号常见样式，例如：
 
-### 发布能力
+- 标签块
+- 强调卡片
+- 数据展示模块
+- 时间线
+- 分栏内容
+- 对比区块
 
-- 一键复制富文本到剪贴板（所见即所得，预览效果 = 发布效果）
-- 一键推送到微信公众号草稿箱
-- 自动将本地/外部图片上传到微信 CDN
-- 自动生成文章封面图
-- CSS 自动内联化 + 基础排版样式注入，标签自动转换为微信兼容格式
+这点很关键，因为很多“AI 写文章”工具最后只能给出一坨文字，真正能发出去的成品还得重新做。
 
 ## 排版示例
 
-MBEditor + AI 可以用自然语言生成任意风格的排版。
+MBEditor + AI 可以直接产出不同风格的公众号版式。
 
 <table>
 <tr>
@@ -262,141 +302,70 @@ MBEditor + AI 可以用自然语言生成任意风格的排版。
 </tr>
 </table>
 
-> 所有模板均为纯 inline style + `<section>` 标签，100% 微信兼容。你也可以用自然语言描述任意风格，AI 实时生成。
+## API 概览
 
-<details>
-<summary><strong>查看生成这些风格的提示词</strong></summary>
+### 文章
+- `POST /api/v1/articles` 创建文章
+- `GET /api/v1/articles` 获取文章列表
+- `GET /api/v1/articles/{id}` 获取文章详情
+- `PUT /api/v1/articles/{id}` 更新文章
+- `DELETE /api/v1/articles/{id}` 删除文章
 
-**明亮清新**
-```
-帮我写一篇推文，明亮清新风格。浅色渐变背景，彩色图标卡片，圆润友好。
-```
+### 图片
+- `POST /api/v1/images/upload` 上传图片
+- `GET /api/v1/images` 获取图片列表
+- `DELETE /api/v1/images/{id}` 删除图片
 
-**暗黑终端**
-```
-帮我写一篇推文，暗黑终端风格。纯黑背景，荧光绿主色，终端界面模拟，等宽字体。
-```
+### 发布
+- `POST /api/v1/publish/draft` 投递到微信草稿箱
+- `POST /api/v1/publish/preview` 预览处理结果
+- `POST /api/v1/publish/process` 处理图片与微信兼容内容
+- `GET /api/v1/publish/html/{id}` 获取处理后的 HTML
 
-**报纸编辑部**
-```
-帮我写一篇推文，复古报纸风格。奶油色背景，双线边框，衬线字体，新闻标签。
-```
-
-**霓虹赛博**
-```
-帮我写一篇推文，赛博朋克风格。深蓝背景，霓虹发光效果，等宽字体。
-```
-
-**大地暖色**
-```
-帮我写一篇推文，大地暖色风格。深棕背景，赤陶/沙色/森林绿搭配，手工匠人感。
-```
-
-**瑞士极简**
-```
-帮我写一篇推文，瑞士极简风格。纯白背景，纯黑文字，唯一彩色是红色色块。
-```
-
-你也可以完全自由发挥：
-```
-帮我写一篇推文，主题是 [你的主题]，风格是 [任意描述]
-```
-
-</details>
+### 配置
+- `GET /api/v1/config` 查看配置状态
+- `PUT /api/v1/config` 配置微信公众号 AppID / AppSecret
 
 ## 技术栈
 
-| 前端 | 后端 | 部署 |
-|------|------|------|
-| React 19 + TypeScript | FastAPI + Python | Docker Compose |
-| Tailwind CSS 4 | premailer (CSS 内联) | Nginx 反向代理 |
-| Monaco Editor | Pillow (图片处理) | 一键启动 |
-| 深色/浅色双主题 | 微信公众号 API | 端口 7073 |
-
-## API 参考
-
-<details>
-<summary><strong>完整 API 端点列表</strong></summary>
-
-### 文章
-
-| 方法 | 端点 | 说明 |
-|------|------|------|
-| `POST` | `/api/v1/articles` | 创建文章 `{title, mode}` |
-| `GET` | `/api/v1/articles` | 列出所有文章 |
-| `GET` | `/api/v1/articles/{id}` | 获取文章详情 |
-| `PUT` | `/api/v1/articles/{id}` | 更新文章 `{html, css, js, markdown, title, mode}` |
-| `DELETE` | `/api/v1/articles/{id}` | 删除文章 |
-
-### 图片
-
-| 方法 | 端点 | 说明 |
-|------|------|------|
-| `POST` | `/api/v1/images/upload` | 上传图片（自动 MD5 去重） |
-| `GET` | `/api/v1/images` | 列出所有图片 |
-| `DELETE` | `/api/v1/images/{id}` | 删除图片 |
-
-### 发布
-
-| 方法 | 端点 | 说明 |
-|------|------|------|
-| `POST` | `/api/v1/publish/draft` | 推送到微信草稿箱 |
-| `POST` | `/api/v1/publish/preview` | 预览处理（CSS 内联化） |
-| `POST` | `/api/v1/publish/process` | 处理文章图片（上传到微信 CDN） |
-| `GET` | `/api/v1/publish/html/{id}` | 获取处理后的 HTML |
-
-### 配置
-
-| 方法 | 端点 | 说明 |
-|------|------|------|
-| `GET` | `/api/v1/config` | 查看配置状态 |
-| `PUT` | `/api/v1/config` | 设置微信 AppID / AppSecret |
-
-</details>
+- Frontend: React 19 + TypeScript + Tailwind CSS 4
+- Backend: FastAPI + Python
+- Infra: Docker Compose + Nginx
+- Editor: Monaco Editor
+- Media: Pillow
+- Publish: 微信公众号 API
 
 ## 项目结构
 
-```
+```text
 mbeditor/
-├── frontend/              # React 19 + TypeScript + Tailwind 4
-│   └── src/
-│       ├── pages/         # 编辑器 / 文章列表 / 设置
-│       ├── components/    # Monaco 编辑器 / 预览 / 操作面板
-│       └── utils/         # Markdown 渲染 / HTML 提取 / CSS 内联
-├── backend/               # FastAPI + Python
-│   └── app/
-│       ├── api/v1/        # REST API 路由
-│       └── services/      # 文章 / 图片 / 微信 API / 发布服务
-├── skill/                 # AI Agent Skill 定义
-│   └── mbeditor.skill.md  # Claude Code / Codex / OpenClaw 兼容
-├── docker-compose.yml     # 一键部署
-└── LICENSE                # MIT
+├─ frontend/
+├─ backend/
+├─ skill/
+├─ docs/
+├─ data/
+├─ docker-compose.yml
+└─ LICENSE
 ```
 
-## 本地开发
+## 接下来建议你先看什么
 
-```bash
-# 后端
-cd backend && pip install -r requirements.txt
-export IMAGES_DIR=../data/images ARTICLES_DIR=../data/articles CONFIG_FILE=../data/config.json
-uvicorn app.main:app --reload --port 7072
+如果你是第一次打开这个项目，建议按这个顺序看：
 
-# 前端（新终端）
-cd frontend && npm install && npm run dev
-```
+1. 先看“它解决的不是写作，而是整条生产链路”
+2. 再看“你实际会怎么用它”
+3. 再看 Agent Demo 和排版示例
+4. 最后再决定是否接入你的工作流
 
 ## 贡献
 
-欢迎提交 [Issue](https://github.com/AAAAAnson/mbeditor/issues) 和 [Pull Request](https://github.com/AAAAAnson/mbeditor/pulls)。
+欢迎提交 Issue 和 Pull Request：
 
-<a href="https://github.com/AAAAAnson">
-  <img src="https://github.com/AAAAAnson.png" width="60" style="border-radius:50%;" alt="AAAAAnson" />
-</a>
+- Issues: <https://github.com/AAAAAnson/mbeditor/issues>
+- Pull Requests: <https://github.com/AAAAAnson/mbeditor/pulls>
 
-**[AAAAAnson](https://github.com/AAAAAnson)** — 创建者与维护者
+项目地址：<https://github.com/AAAAAnson/mbeditor>
 
-## 许可证
+## License
 
-[MIT](LICENSE) &copy; 2025 Anson
-
-_在真正的AGI时代到到来之前，你与世界的摩擦就是最强的生产力。_
+MIT © Anson
